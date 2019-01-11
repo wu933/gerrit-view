@@ -1,0 +1,139 @@
+{
+  "name": "gerrit-view",
+  "displayName": "Gerrit View",
+  "description": "Show the gerrit dashboard in a tree view",
+  "keywords": [],
+  "version": "0.0.112",
+  "icon": "resources/todo-tree.png",
+  "publisher": "Gruntfuggly",
+  "engines": {
+    "vscode": "^1.5.0"
+  },
+  "repository": "https://github.com/Gruntfuggly/gerrit-view",
+  "scripts": {},
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./extension",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gerrit-view-container",
+          "title": "Gerrit",
+          "icon": "resources/gerrit-container.svg"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "gerrit-view-explorer",
+          "name": "Gerrit",
+          "when": "gerrit-in-explorer"
+        }
+      ],
+      "gerrit-view-container": [
+        {
+          "id": "gerrit-view",
+          "name": "Gerrit"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "gerrit-view.filter",
+          "when": "view =~ /gerrit-view/ && gerrit-view-filtered == false",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gerrit-view.filterClear",
+          "when": "view =~ /gerrit-view/ && gerrit-view-filtered == true",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gerrit-view.refresh",
+          "when": "view =~ /gerrit-view/",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "gerrit-view.showGerritView",
+        "title": "Show Tree View",
+        "category": "Gerrit View",
+        "icon": {
+          "dark": "resources/icons/dark/tree.svg",
+          "light": "resources/icons/light/tree.svg"
+        }
+      },
+      {
+        "command": "gerrit-view.refresh",
+        "title": "Refresh",
+        "category": "Gerrit View",
+        "icon": {
+          "dark": "resources/icons/dark/refresh.svg",
+          "light": "resources/icons/light/refresh.svg"
+        }
+      },
+      {
+        "command": "gerrit-view.filter",
+        "title": "Filter Tree",
+        "category": "Gerrit View",
+        "icon": {
+          "dark": "resources/icons/dark/filter.svg",
+          "light": "resources/icons/light/filter.svg"
+        }
+      },
+      {
+        "command": "gerrit-view.filterClear",
+        "title": "Clear Filter",
+        "category": "Gerrit View",
+        "icon": {
+          "dark": "resources/icons/dark/clear-filter.svg",
+          "light": "resources/icons/light/clear-filter.svg"
+        }
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Gerrit View",
+      "properties": {
+        "gerrit-view.debug": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Create a debug channel in the Output view"
+        },
+        "gerrit-view.showInExplorer": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show the tree in the explorer view"
+        },
+        "gerrit-view.filterCaseSensitive": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Set to true if you want the view filtering to be case sensitive"
+        },
+        "gerrit-view.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Refresh the tree periodically"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "gerritbot": "^1.0.3",
+    "micromatch": "^3.1.10",
+    "ssh-client": "0.0.1"
+  },
+  "devDependencies": {
+    "node-qunit": "^1.0.0",
+    "qunit": "^2.8.0"
+  }
+}
