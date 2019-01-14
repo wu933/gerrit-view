@@ -22,7 +22,7 @@ function activate( context )
         },
         {
             parent: "subject",
-            children: [ "number", "owner.username", "status" ],
+            children: [ "number", "status", "owner.username" ],
         },
         {
             parent: "owner.username",
@@ -86,7 +86,30 @@ function activate( context )
         var extractors = {};
         extractors.subject = function( entry )
         {
-            return entry.number + " " + entry.subject;
+            var score = 0;
+            if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
+            {
+                entry.currentPatchSet.approvals.map( function( approval )
+                {
+                    var approvalScore = parseInt( approval.value );
+                    if( approvalScore === -2 )
+                    {
+                        score = -2;
+                    }
+                    else if( score !== -2 )
+                    {
+                        if( approvalScore === 2 )
+                        {
+                            score = 2;
+                        }
+                        else
+                        {
+                            score = Math.max( score, approvalScore );
+                        }
+                    }
+                } );
+            }
+            return score + " " + entry.subject;
         };
 
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
@@ -97,7 +120,7 @@ function activate( context )
             {
                 results.forEach( result =>
                 {
-                    debug( "entry: " + JSON.stringify( result ) );
+                    debug( "entry: " + JSON.stringify( result, null, 2 ) );
                 } );
                 provider.populate( results, extractors );
                 refresh();

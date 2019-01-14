@@ -66,7 +66,7 @@ class TreeNodeProvider
 
     getTreeItem( node )
     {
-        var treeItem = new vscode.TreeItem( node.label );
+        var treeItem = new vscode.TreeItem( node.label ? node.label : node.value );
 
         treeItem.id = node.id;
 
@@ -125,32 +125,16 @@ class TreeNodeProvider
 
     populate( data, extractors )
     {
-        function findNode( type, label, children )
+        var locateNode = function( node )
         {
-            var found;
-
-            if( children === undefined )
-            {
-                children = nodes;
-            }
-            children.forEach( function( child )
-            {
-                if( child.type === type && child.label === label )
-                {
-                    found = child;
-                }
-                else if( child.nodes !== undefined && found === undefined )
-                {
-                    found = findNode( type, label, child.nodes );
-                }
-            }, this );
-
-            return found;
+            return node.type === this.type && node.value === this.value;
         }
 
         data.map( function( item )
         {
             var entry = item.details;
+            var parent;
+            var parents = nodes;
             for( var level = 0; level < this._structure.length; ++level )
             {
                 var children = this._structure[ level ].children;
@@ -159,13 +143,30 @@ class TreeNodeProvider
                     var value = getProperty( entry, property );
                     if( value !== undefined )
                     {
-                        var node = findNode( property, value );
+                        var node;
+
+                        if( level > 0 )
+                        {
+                            parent = parents.find( locateNode, {
+                                type: this._structure[ level ].parent,
+                                value: getProperty( entry, this._structure[ level ].parent )
+                            } );
+                        }
+
+                        if( parent !== undefined )
+                        {
+                            node = parent.nodes.find( locateNode, { type: property, value: value } );
+                        }
+                        else
+                        {
+                            node = nodes.find( locateNode, { type: property, value: value } );
+                        }
 
                         if( node === undefined )
                         {
                             node = {
                                 level: level,
-                                label: getProperty( entry, property ),
+                                value: value,
                                 type: property,
                                 id: ( buildCounter * 1000000 ) + nodeCounter++,
                                 visible: true,
@@ -183,13 +184,16 @@ class TreeNodeProvider
                             }
                             else
                             {
-                                var parent = findNode( this._structure[ level ].parent, getProperty( entry, this._structure[ level ].parent ) );
                                 node.parent = parent;
                                 parent.nodes.push( node );
                             }
                         }
                     }
                 }, this );
+                if( level > 0 && parent !== undefined )
+                {
+                    parents = parent.nodes;
+                }
             }
         }, this );
     }
