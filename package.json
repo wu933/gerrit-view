@@ -32,8 +32,7 @@
             "explorer": [
                 {
                     "id": "gerrit-view-explorer",
-                    "name": "Gerrit",
-                    "when": "gerrit-in-explorer"
+                    "name": "Gerrit"
                 }
             ],
             "gerrit-view-container": [

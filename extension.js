@@ -1,7 +1,6 @@
 /* jshint esversion:6 */
 
 var vscode = require( 'vscode' );
-// var path = require( 'path' );
 var gerrit = require( './gerrit.js' );
 var fs = require( 'fs' )
 
@@ -19,7 +18,11 @@ function activate( context )
         },
         {
             parent: "branch",
-            children: [ "number", "subject", "owner.username", "status" ],
+            children: [ "subject" ]
+        },
+        {
+            parent: "subject",
+            children: [ "number", "owner.username", "status" ],
         },
         {
             parent: "owner.username",
@@ -66,7 +69,7 @@ function activate( context )
 
     function refresh()
     {
-        provider.rebuild();
+        provider.refresh();
         setContext();
     }
 
@@ -80,34 +83,33 @@ function activate( context )
 
     function getGerritData()
     {
-        // var config = vscode.workspace.getConfiguration( 'gerrit-view' );
-        // var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "qyery" );
-        // gerrit.query( query ).then( matches =>
-        // {
-        //     if( matches.length > 0 )
-        //     {
-        //         matches.forEach( entry =>
-        //         {
-        //             console.log( " Entry: " + JSON.stringify( entry ) );
-        //         } );
-        //     }
-        // } ).catch( e =>
-        // {
-        //     var message = e.message;
-        //     if( e.stderr )
-        //     {
-        //         message += " (" + e.stderr + ")";
-        //     }
-        //     vscode.window.showErrorMessage( "gerrit-view: " + message );
-        // } );
-
-        fs.readFile( '/Users/nige/Projects/vscode-extensions/gerrit-view/gerrit.json', 'utf8', function( err, data )
+        var extractors = {};
+        extractors.subject = function( entry )
         {
-            if( err )
+            return entry.number + " " + entry.subject;
+        };
+
+        var config = vscode.workspace.getConfiguration( 'gerrit-view' );
+        var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "query" );
+        gerrit.query( query ).then( function( results )
+        {
+            if( results.length > 0 )
             {
-                return console.log( err );
+                results.forEach( result =>
+                {
+                    debug( "entry: " + JSON.stringify( result ) );
+                } );
+                provider.populate( results, extractors );
+                refresh();
             }
-            provider.populate( JSON.parse( data ) );
+        } ).catch( function( e )
+        {
+            var message = e.message;
+            if( e.stderr )
+            {
+                message += " (" + e.stderr + ")";
+            }
+            vscode.window.showErrorMessage( "gerrit-view: " + message );
         } );
     }
 
@@ -156,7 +158,6 @@ function activate( context )
         resetOutputChannel();
 
         setContext();
-        // rebuild();
 
         getGerritData();
     }

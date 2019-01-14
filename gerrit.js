@@ -34,7 +34,7 @@ module.exports.query = function query( command, options )
 
     var execString = command;
 
-    debug( "Command: " + execString );
+    debug( execString );
 
     return new Promise( function( resolve, reject )
     {
@@ -73,7 +73,7 @@ class Entry
 {
     constructor( text )
     {
-        this.result = JSON.parse( text );
+        this.details = JSON.parse( text );
     }
 }
 

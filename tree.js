@@ -16,13 +16,13 @@ var getProperty = function( object, path )
     var o = object;
     var p = path;
     var dot = p.indexOf( "." );
-    while( dot > -1 )
+    while( o && dot > -1 )
     {
         o = object[ p.substr( 0, dot ) ];
         p = p.substr( dot + 1 );
         dot = p.indexOf( "." );
     }
-    return o[ p ];
+    return o && o[ p ];
 };
 
 class TreeNodeProvider
@@ -70,7 +70,7 @@ class TreeNodeProvider
 
         treeItem.id = node.id;
 
-        treeItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
+        treeItem.collapsibleState = node.nodes && node.nodes.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
         return treeItem;
     }
@@ -123,9 +123,9 @@ class TreeNodeProvider
         }, this );
     }
 
-    populate( data )
+    populate( data, extractors )
     {
-        function findNode( /* level, */ type, label, children )
+        function findNode( type, label, children )
         {
             var found;
 
@@ -135,56 +135,63 @@ class TreeNodeProvider
             }
             children.forEach( function( child )
             {
-                if( /* child.level === level &&  */child.type === type && child.label === label )
+                if( child.type === type && child.label === label )
                 {
                     found = child;
                 }
-                else if( child.nodes !== undefined )
+                else if( child.nodes !== undefined && found === undefined )
                 {
-                    found = findNode( /* level++, */ type, label, child.nodes );
+                    found = findNode( type, label, child.nodes );
                 }
             }, this );
 
             return found;
         }
 
-        data.map( function( entry )
+        data.map( function( item )
         {
+            var entry = item.details;
             for( var level = 0; level < this._structure.length; ++level )
             {
                 var children = this._structure[ level ].children;
                 children.map( function( property )
                 {
-                    var node = findNode( /* level, */ property, getProperty( entry, property ) );
-
-                    if( node === undefined )
+                    var value = getProperty( entry, property );
+                    if( value !== undefined )
                     {
-                        node = {
-                            level: level,
-                            label: getProperty( entry, property ),
-                            // nodeType: this._structure[ level ].type ,
-                            type: property,
-                            id: ( buildCounter * 1000000 ) + nodeCounter++,
-                            visible: true,
-                            nodes: []
-                        };
+                        var node = findNode( property, value );
 
-                        if( level === 0 )
+                        if( node === undefined )
                         {
-                            nodes.push( node );
-                        }
-                        else
-                        {
-                            var parent = findNode( /* level - 1, */ this._structure[ level ].parent, getProperty( entry, this._structure[ level ].parent ) );
-                            node.parent = parent;
-                            parent.nodes.push( node );
+                            node = {
+                                level: level,
+                                label: getProperty( entry, property ),
+                                type: property,
+                                id: ( buildCounter * 1000000 ) + nodeCounter++,
+                                visible: true,
+                                nodes: []
+                            };
+
+                            if( extractors[ property ] !== undefined )
+                            {
+                                node.label = extractors[ property ]( entry );
+                            }
+
+                            if( level === 0 )
+                            {
+                                nodes.push( node );
+                            }
+                            else
+                            {
+                                var parent = findNode( this._structure[ level ].parent, getProperty( entry, this._structure[ level ].parent ) );
+                                node.parent = parent;
+                                parent.nodes.push( node );
+                            }
                         }
                     }
                 }, this );
             }
         }, this );
-
-        console.log( "Done" );
     }
 }
 
