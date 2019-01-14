@@ -3,12 +3,31 @@
 var vscode = require( 'vscode' );
 // var path = require( 'path' );
 var gerrit = require( './gerrit.js' );
+var fs = require( 'fs' )
 
 var tree = require( "./tree.js" );
 
 function activate( context )
 {
-    var provider = new tree.TreeNodeProvider( context );
+    var structure = [
+        {
+            children: [ "project" ]
+        },
+        {
+            parent: "project",
+            children: [ "branch" ],
+        },
+        {
+            parent: "branch",
+            children: [ "number", "subject", "owner.username", "status" ],
+        },
+        {
+            parent: "owner.username",
+            children: [ "owner.name", "owner.email" ],
+        }
+    ];
+
+    var provider = new tree.TreeNodeProvider( context, structure );
 
     var gerritViewExplorer = vscode.window.createTreeView( "gerrit-view-explorer", { treeDataProvider: provider } );
     var gerritView = vscode.window.createTreeView( "gerrit-view", { treeDataProvider: provider } );
@@ -61,23 +80,34 @@ function activate( context )
 
     function getGerritData()
     {
-        gerrit.query( 'ssh -p 29418 asl-gerrit.asl.lan gerrit query status:open --format JSON' ).then( matches =>
+        // var config = vscode.workspace.getConfiguration( 'gerrit-view' );
+        // var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "qyery" );
+        // gerrit.query( query ).then( matches =>
+        // {
+        //     if( matches.length > 0 )
+        //     {
+        //         matches.forEach( entry =>
+        //         {
+        //             console.log( " Entry: " + JSON.stringify( entry ) );
+        //         } );
+        //     }
+        // } ).catch( e =>
+        // {
+        //     var message = e.message;
+        //     if( e.stderr )
+        //     {
+        //         message += " (" + e.stderr + ")";
+        //     }
+        //     vscode.window.showErrorMessage( "gerrit-view: " + message );
+        // } );
+
+        fs.readFile( '/Users/nige/Projects/vscode-extensions/gerrit-view/gerrit.json', 'utf8', function( err, data )
         {
-            if( matches.length > 0 )
+            if( err )
             {
-                matches.forEach( entry =>
-                {
-                    console.log( " Entry: " + JSON.stringify( entry ) );
-                } );
+                return console.log( err );
             }
-        } ).catch( e =>
-        {
-            var message = e.message;
-            if( e.stderr )
-            {
-                message += " (" + e.stderr + ")";
-            }
-            vscode.window.showErrorMessage( "todo-tree: " + message );
+            provider.populate( JSON.parse( data ) );
         } );
     }
 

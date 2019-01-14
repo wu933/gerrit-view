@@ -1,5 +1,4 @@
-const child_process = require( 'child_process' );
-// const fs = require( 'fs' );
+var child_process = require( 'child_process' );
 
 var currentProcess;
 
@@ -23,39 +22,34 @@ function formatResults( stdout )
         .map( ( line ) => new Entry( line ) );
 }
 
-module.exports.query = function query( command )
+module.exports.query = function query( command, options )
 {
-    let execString = command;
+    function debug( text )
+    {
+        if( options && options.outputChannel )
+        {
+            options.outputChannel.appendLine( text );
+        }
+    }
 
-    // if( options.outputChannel )
-    // {
-    //     options.outputChannel.appendLine( "Command: " + execString );
-    // }
+    var execString = command;
+
+    debug( "Command: " + execString );
 
     return new Promise( function( resolve, reject )
     {
-        // The default for omitting maxBuffer, according to Node docs, is 200kB.
-        // We'll explicitly give that here if a custom value is not provided.
-        // Note that our options value is in KB, so we have to convert to bytes.
-        const maxBuffer = 200 * 1024;
         var currentProcess = child_process.exec( execString );
         var results = "";
 
         currentProcess.stdout.on( 'data', function( data )
         {
-            // if( options.outputChannel )
-            // {
-            //     options.outputChannel.appendLine( data );
-            // }
+            debug( data );
             results += data;
         } );
 
         currentProcess.stderr.on( 'data', function( data )
         {
-            // if( options.outputChannel )
-            // {
-            //     options.outputChannel.appendLine( data );
-            // }
+            debug( data )
             reject( new GerritError( data, "" ) );
         } );
 
