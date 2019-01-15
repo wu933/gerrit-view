@@ -18,11 +18,15 @@ function activate( context )
         },
         {
             parent: "branch",
+            children: [ "status" ]
+        },
+        {
+            parent: "status",
             children: [ "subject" ]
         },
         {
             parent: "subject",
-            children: [ "number", "status", "owner.username" ],
+            children: [ "number", "owner.username" ],
         },
         {
             parent: "owner.username",
@@ -110,6 +114,41 @@ function activate( context )
             return score + " " + entry.subject;
         };
 
+        var icons = {};
+        icons.subject = function( entry )
+        {
+            var name;
+            if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
+            {
+                var score = 0;
+                entry.currentPatchSet.approvals.map( function( approval )
+                {
+                    var approvalScore = parseInt( approval.value );
+                    if( approvalScore === -2 )
+                    {
+                        name = "minus-two";
+                        score = approvalScore;
+                    }
+                    else if( approvalScore === 2 )
+                    {
+                        name = "plus-two";
+                        score = approvalScore;
+                    }
+                    else if( Math.abs( score ) < 2 && approvalScore === -1 )
+                    {
+                        name = "minus-one";
+                        score = approvalScore;
+                    }
+                    else if( Math.abs( score ) < 2 && approvalScore === 1 )
+                    {
+                        name = "plus-one";
+                        score = approvalScore;
+                    }
+                } );
+            }
+            return name;
+        };
+
         provider.clear();
 
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
@@ -123,7 +162,7 @@ function activate( context )
                 {
                     debug( "entry: " + JSON.stringify( result, null, 2 ) );
                 } );
-                provider.populate( results, extractors );
+                provider.populate( results, extractors, icons );
                 refresh();
             }
             else

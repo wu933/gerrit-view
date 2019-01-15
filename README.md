@@ -27,3 +27,5 @@ If you find this extension useful, please feel free to donate <a href="https://p
 ### Credits
 
 Icon from wikipedai - attribution: By Original uploader was Leucosticte at MediaWiki - Transferred from MediaWiki, Public Domain, https://commons.wikimedia.org/w/index.php?curid=27361356
+
+<div>Score icons made by <a href="https://www.flaticon.com/authors/google" title="Google">Google</a> from <a href="https://www.flaticon.com/" 			    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" 			    title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>

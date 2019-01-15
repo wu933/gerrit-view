@@ -1,6 +1,7 @@
 /* jshint esversion:6 */
 
 var vscode = require( 'vscode' );
+var path = require( 'path' );
 
 var nodes = [];
 var buildCounter = 1;
@@ -72,6 +73,17 @@ class TreeNodeProvider
 
         treeItem.collapsibleState = node.nodes && node.nodes.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
 
+        if( node.icon !== undefined )
+        {
+            var darkIconPath = this._context.asAbsolutePath( path.join( "resources/icons", "dark", node.icon + ".svg" ) );
+            var lightIconPath = this._context.asAbsolutePath( path.join( "resources/icons", "light", node.icon + ".svg" ) );
+
+            treeItem.iconPath = {
+                dark: darkIconPath,
+                light: lightIconPath
+            };
+        }
+
         return treeItem;
     }
 
@@ -123,7 +135,7 @@ class TreeNodeProvider
         }, this );
     }
 
-    populate( data, extractors )
+    populate( data, extractors, icons )
     {
         var locateNode = function( node )
         {
@@ -176,6 +188,10 @@ class TreeNodeProvider
                             if( extractors[ property ] !== undefined )
                             {
                                 node.label = extractors[ property ]( entry );
+                            }
+                            if( icons[ property ] !== undefined )
+                            {
+                                node.icon = icons[ property ]( entry );
                             }
 
                             if( level === 0 )
