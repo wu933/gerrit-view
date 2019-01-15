@@ -4,7 +4,7 @@
     "description": "Show the gerrit dashboard in a tree view",
     "keywords": [],
     "version": "0.0.112",
-    "icon": "resources/todo-tree.png",
+    "icon": "resources/gerrit-view.png",
     "publisher": "Gruntfuggly",
     "engines": {
         "vscode": "^1.5.0"

@@ -25,3 +25,5 @@ The source code is available on GitHub [here](https://github.com/Gruntfuggly/ger
 If you find this extension useful, please feel free to donate <a href="https://paypal.me/Gruntfuggly">here</a>. Thanks!
 
 ### Credits
+
+Icon from wikipedai - attribution: By Original uploader was Leucosticte at MediaWiki - Transferred from MediaWiki, Public Domain, https://commons.wikimedia.org/w/index.php?curid=27361356
