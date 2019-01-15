@@ -29,3 +29,5 @@ If you find this extension useful, please feel free to donate <a href="https://p
 Icon from wikipedia - attribution: By Original uploader was Leucosticte at MediaWiki - Transferred from MediaWiki, Public Domain, https://commons.wikimedia.org/w/index.php?curid=27361356
 
 Score icons license: Apache 2.0
+
+Verfied/Failed icons license: http://creativecommons.org/licenses/by-sa/3.0/

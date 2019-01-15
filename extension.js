@@ -92,30 +92,51 @@ function activate( context )
             if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
             {
                 var score = 0;
+                var finished = false;
+
                 entry.currentPatchSet.approvals.map( function( approval )
                 {
-                    var approvalScore = parseInt( approval.value );
-                    if( approvalScore === -2 )
+                    if( finished === false )
                     {
-                        name = "minus-two";
-                        score = approvalScore;
-                    }
-                    else if( approvalScore === 2 )
-                    {
-                        name = "plus-two";
-                        score = approvalScore;
-                    }
-                    else if( Math.abs( score ) < 2 && approvalScore === -1 )
-                    {
-                        name = "minus-one";
-                        score = approvalScore;
-                    }
-                    else if( Math.abs( score ) < 2 && approvalScore === 1 )
-                    {
-                        name = "plus-one";
-                        score = approvalScore;
+                        var approvalScore = parseInt( approval.value );
+
+                        if( approval.type === "Verified" )
+                        {
+                            if( approvalScore === -1 )
+                            {
+                                name = "failed";
+                                finished = true;
+                            }
+                            else if( approvalScore === 1 )
+                            {
+                                name = "verified";
+                            }
+                        }
+                        if( approval.type === "Code-Review" )
+                        {
+                            if( approvalScore === -2 )
+                            {
+                                name = "minus-two";
+                                finished = true;
+                            }
+                            else if( approvalScore === -1 && score < 2 )
+                            {
+                                score = approvalScore;
+                            }
+                            else if( approvalScore > 0 )
+                            {
+                                score = approvalScore;
+                            }
+                        }
                     }
                 } );
+
+                switch( score )
+                {
+                    case 2: name = "plus-two"; break;
+                    case 1: name = "plus-one"; break;
+                    case -1: name = "minus-one"; break;
+                }
             }
             return name;
         };
