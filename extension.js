@@ -10,33 +10,33 @@ function activate( context )
 {
     var structure = [
         {
-            children: [ "project" ]
+            children: [ { property: "project" } ]
         },
         {
             parent: "project",
-            children: [ "branch" ],
+            children: [ { property: "branch", format: "branch: ${branch}" } ],
         },
         {
             parent: "branch",
-            children: [ "status" ]
+            children: [ { property: "status" } ]
         },
         {
             parent: "status",
-            children: [ "subject" ]
+            children: [ { property: "subject" } ]
         },
         {
             parent: "subject",
-            children: [ "number", "owner.username" ],
+            children: [ { property: "number" }, { property: "owner.username" } ],
         },
         {
             parent: "owner.username",
-            children: [ "owner.name", "owner.email" ],
+            children: [ { property: "owner.name" }, { property: "owner.email" } ],
         }
     ];
 
     var provider = new tree.TreeNodeProvider( context, structure );
 
-    var gerritView = vscode.window.createTreeView( "gerrit-view", { treeDataProvider: provider } );
+    var gerritView = vscode.window.createTreeView( "gerrit-view", { treeDataProvider: provider, showCollapseAll: true } );
 
     var outputChannel;
 
@@ -86,33 +86,33 @@ function activate( context )
     function getGerritData()
     {
         var extractors = {};
-        extractors.subject = function( entry )
-        {
-            var score = 0;
-            if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
-            {
-                entry.currentPatchSet.approvals.map( function( approval )
-                {
-                    var approvalScore = parseInt( approval.value );
-                    if( approvalScore === -2 )
-                    {
-                        score = -2;
-                    }
-                    else if( score !== -2 )
-                    {
-                        if( approvalScore === 2 )
-                        {
-                            score = 2;
-                        }
-                        else
-                        {
-                            score = Math.max( score, approvalScore );
-                        }
-                    }
-                } );
-            }
-            return score + " " + entry.subject;
-        };
+        // extractors.subject = function( entry )
+        // {
+        //     var score = 0;
+        //     if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
+        //     {
+        //         entry.currentPatchSet.approvals.map( function( approval )
+        //         {
+        //             var approvalScore = parseInt( approval.value );
+        //             if( approvalScore === -2 )
+        //             {
+        //                 score = -2;
+        //             }
+        //             else if( score !== -2 )
+        //             {
+        //                 if( approvalScore === 2 )
+        //                 {
+        //                     score = 2;
+        //                 }
+        //                 else
+        //                 {
+        //                     score = Math.max( score, approvalScore );
+        //                 }
+        //             }
+        //         } );
+        //     }
+        //     return score + " " + entry.subject;
+        // };
 
         var icons = {};
         icons.subject = function( entry )
@@ -192,7 +192,7 @@ function activate( context )
                     {
                         context.workspaceState.update( 'filtered', true );
                         provider.filter( currentFilter );
-                        refreshTree();
+                        refresh();
                     }
                 } );
         } ) );

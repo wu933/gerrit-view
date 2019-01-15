@@ -99,7 +99,7 @@ class TreeNodeProvider
 
     filter( text, children )
     {
-        var matcher = new RegExp( text, config.showFilterCaseSensitive() ? "" : "i" );
+        var matcher = new RegExp( text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
 
         if( children === undefined )
         {
@@ -108,13 +108,16 @@ class TreeNodeProvider
         children.forEach( child =>
         {
             var match = matcher.test( child.label );
-            child.visible = !text || match;
 
-            if( child.visible && child.nodes !== undefined )
+            if( child.nodes !== undefined )
             {
                 this.filter( text, child.nodes );
                 var visibleNodes = child.nodes ? child.nodes.filter( isVisible ).length : 0;
                 child.visible = visibleNodes > 0;
+            }
+            else
+            {
+                child.visible = !text || match;
             }
         } );
     }
@@ -150,9 +153,9 @@ class TreeNodeProvider
             for( var level = 0; level < this._structure.length; ++level )
             {
                 var children = this._structure[ level ].children;
-                children.map( function( property )
+                children.map( function( child )
                 {
-                    var value = getProperty( entry, property );
+                    var value = getProperty( entry, child.property );
                     if( value !== undefined )
                     {
                         var node;
@@ -167,11 +170,11 @@ class TreeNodeProvider
 
                         if( parent !== undefined )
                         {
-                            node = parent.nodes.find( locateNode, { type: property, value: value } );
+                            node = parent.nodes.find( locateNode, { type: child.property, value: value } );
                         }
                         else
                         {
-                            node = nodes.find( locateNode, { type: property, value: value } );
+                            node = nodes.find( locateNode, { type: child.property, value: value } );
                         }
 
                         if( node === undefined )
@@ -179,19 +182,30 @@ class TreeNodeProvider
                             node = {
                                 level: level,
                                 value: value,
-                                type: property,
+                                type: child.property,
                                 id: ( buildCounter * 1000000 ) + nodeCounter++,
                                 visible: true,
                                 nodes: []
                             };
 
-                            if( extractors[ property ] !== undefined )
+                            if( extractors[ child.property ] !== undefined )
                             {
-                                node.label = extractors[ property ]( entry );
+                                node.label = extractors[ child.property ]( entry );
                             }
-                            if( icons[ property ] !== undefined )
+                            if( child.format !== undefined )
                             {
-                                node.icon = icons[ property ]( entry );
+                                var label = child.format;
+                                var regex = new RegExp( "\\$\\{(.*?)\\}", "g" );
+                                label = label.replace( regex, function( match, name )
+                                {
+                                    return getProperty( entry, name );
+                                } );
+                                node.label = label;
+                            }
+
+                            if( icons[ child.property ] !== undefined )
+                            {
+                                node.icon = icons[ child.property ]( entry );
                             }
 
                             if( level === 0 )
