@@ -19,23 +19,14 @@
     ],
     "main": "./extension",
     "contributes": {
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "gerrit-view-container",
-                    "title": "Gerrit",
-                    "icon": "resources/gerrit-container.svg"
-                }
-            ]
-        },
         "views": {
             "explorer": [
                 {
-                    "id": "gerrit-view-explorer",
+                    "id": "gerrit-view",
                     "name": "Gerrit"
                 }
             ],
-            "gerrit-view-container": [
+            "scm": [
                 {
                     "id": "gerrit-view",
                     "name": "Gerrit"
@@ -109,8 +100,8 @@
                 },
                 "gerrit-view.query": {
                     "type": "string",
-                    "default": "status:open --format JSON",
-                    "markdownDescription": "Query for retreiving data"
+                    "default": "status:open",
+                    "markdownDescription": "Query for retrieving data"
                 },
                 "gerrit-view.debug": {
                     "type": "boolean",
@@ -136,12 +127,6 @@
         }
     },
     "dependencies": {
-        "gerritbot": "^1.0.3",
-        "micromatch": "^3.1.10",
-        "ssh-client": "0.0.1"
-    },
-    "devDependencies": {
-        "node-qunit": "^1.0.0",
-        "qunit": "^2.8.0"
+        "micromatch": "^3.1.10"
     }
 }

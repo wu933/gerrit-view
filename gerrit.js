@@ -8,7 +8,7 @@ function GerritError( error, stderr )
     this.stderr = stderr;
 }
 
-function formatResults( stdout )
+function formatResults( stdout, debug )
 {
     stdout = stdout.trim();
 
@@ -17,9 +17,20 @@ function formatResults( stdout )
         return [];
     }
 
-    return stdout
-        .split( '\n' )
-        .map( ( line ) => new Entry( line ) );
+    var results = [];
+
+    try
+    {
+        results = stdout
+            .split( '\n' )
+            .map( ( line ) => new Entry( line ) );
+    }
+    catch( e )
+    {
+        debug( e );
+    }
+
+    return results;
 }
 
 module.exports.query = function query( command, options )
@@ -55,7 +66,7 @@ module.exports.query = function query( command, options )
 
         currentProcess.on( 'close', function( code )
         {
-            resolve( formatResults( results ) );
+            resolve( formatResults( results, debug ) );
         } );
 
     } );

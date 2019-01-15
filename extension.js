@@ -32,13 +32,11 @@ function activate( context )
 
     var provider = new tree.TreeNodeProvider( context, structure );
 
-    var gerritViewExplorer = vscode.window.createTreeView( "gerrit-view-explorer", { treeDataProvider: provider } );
     var gerritView = vscode.window.createTreeView( "gerrit-view", { treeDataProvider: provider } );
 
     var outputChannel;
 
     context.subscriptions.push( provider );
-    context.subscriptions.push( gerritViewExplorer );
     context.subscriptions.push( gerritView );
 
     function resetOutputChannel()
@@ -112,9 +110,12 @@ function activate( context )
             return score + " " + entry.subject;
         };
 
+        provider.clear();
+
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
-        var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "query" );
-        gerrit.query( query ).then( function( results )
+        var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " --format JSON";
+
+        gerrit.query( query, { outputChannel: outputChannel } ).then( function( results )
         {
             if( results.length > 0 )
             {
@@ -124,6 +125,10 @@ function activate( context )
                 } );
                 provider.populate( results, extractors );
                 refresh();
+            }
+            else
+            {
+                vscode.window.showInformationMessage( "gerrit-view: No results found" );
             }
         } ).catch( function( e )
         {
@@ -154,7 +159,7 @@ function activate( context )
         } ) );
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filterClear', clearFilter ) );
-        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.refresh', refresh ) );
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.refresh', getGerritData ) );
 
         context.subscriptions.push( vscode.workspace.onDidChangeConfiguration( function( e )
         {
@@ -166,7 +171,7 @@ function activate( context )
                 }
                 else
                 {
-                    refresh();
+                    getGerritData();
                 }
 
                 vscode.commands.executeCommand( 'setContext', 'gerrit-view-in-explorer', vscode.workspace.getConfiguration( 'gerrit-view' ).showInExplorer );
