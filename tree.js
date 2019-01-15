@@ -138,7 +138,7 @@ class TreeNodeProvider
         }, this );
     }
 
-    populate( data, extractors, icons )
+    populate( data, icons )
     {
         var locateNode = function( node )
         {
@@ -188,10 +188,6 @@ class TreeNodeProvider
                                 nodes: []
                             };
 
-                            if( extractors[ child.property ] !== undefined )
-                            {
-                                node.label = extractors[ child.property ]( entry );
-                            }
                             if( child.format !== undefined )
                             {
                                 var label = child.format;

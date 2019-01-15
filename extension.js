@@ -85,35 +85,6 @@ function activate( context )
 
     function getGerritData()
     {
-        var extractors = {};
-        // extractors.subject = function( entry )
-        // {
-        //     var score = 0;
-        //     if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
-        //     {
-        //         entry.currentPatchSet.approvals.map( function( approval )
-        //         {
-        //             var approvalScore = parseInt( approval.value );
-        //             if( approvalScore === -2 )
-        //             {
-        //                 score = -2;
-        //             }
-        //             else if( score !== -2 )
-        //             {
-        //                 if( approvalScore === 2 )
-        //                 {
-        //                     score = 2;
-        //                 }
-        //                 else
-        //                 {
-        //                     score = Math.max( score, approvalScore );
-        //                 }
-        //             }
-        //         } );
-        //     }
-        //     return score + " " + entry.subject;
-        // };
-
         var icons = {};
         icons.subject = function( entry )
         {
@@ -152,7 +123,7 @@ function activate( context )
         provider.clear();
 
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
-        var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " --format JSON";
+        var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
 
         gerrit.query( query, { outputChannel: outputChannel } ).then( function( results )
         {
@@ -162,7 +133,7 @@ function activate( context )
                 {
                     debug( "entry: " + JSON.stringify( result, null, 2 ) );
                 } );
-                provider.populate( results, extractors, icons );
+                provider.populate( results, icons );
                 refresh();
             }
             else

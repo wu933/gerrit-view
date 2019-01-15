@@ -98,6 +98,11 @@
                     "type": "string",
                     "markdownDescription": "Your Gerrit server hostname"
                 },
+                "gerrit-view.options": {
+                    "type": "string",
+                    "default": "--current-patch-set",
+                    "markdownDescription": "Query options"
+                },
                 "gerrit-view.query": {
                     "type": "string",
                     "default": "status:open",
