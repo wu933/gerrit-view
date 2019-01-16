@@ -2,7 +2,6 @@
 
 var vscode = require( 'vscode' );
 var gerrit = require( './gerrit.js' );
-var fs = require( 'fs' )
 
 var tree = require( "./tree.js" );
 
@@ -151,15 +150,16 @@ function activate( context )
             return name;
         };
 
-        provider.clear();
+        // provider.clear();
 
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
-        var query = "ssh -p 29418 " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
+        var query = "ssh -p " + config.get( "port" ) + " " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
 
-        gerrit.query( query, { outputChannel: outputChannel } ).then( function( results )
+        gerrit.query( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
         {
             if( results.length > 0 )
             {
+                // results = results.slice( 0, 1 );
                 results.forEach( result =>
                 {
                     debug( "entry: " + JSON.stringify( result, null, 2 ) );
@@ -201,6 +201,9 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filterClear', clearFilter ) );
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.refresh', getGerritData ) );
+
+        context.subscriptions.push( gerritView.onDidExpandElement( function( e ) { provider.setExpanded( e.element.id, true ); } ) );
+        context.subscriptions.push( gerritView.onDidCollapseElement( function( e ) { provider.setExpanded( e.element.id, false ); } ) );
 
         context.subscriptions.push( vscode.workspace.onDidChangeConfiguration( function( e )
         {

@@ -98,6 +98,16 @@
                     "type": "string",
                     "markdownDescription": "Your Gerrit server hostname"
                 },
+                "gerrit-view.port": {
+                    "type": "number",
+                    "default": 29418,
+                    "markdownDescription": "Port number for your Gerrit server"
+                },
+                "gerrit-view.queryBufferSize": {
+                    "type": "number",
+                    "default": 200,
+                    "markdownDescription": "Size of query buffer in kilobytes. Increase this if you expect lots of query results."
+                },
                 "gerrit-view.options": {
                     "type": "string",
                     "default": "--current-patch-set",

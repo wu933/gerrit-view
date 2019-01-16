@@ -4,8 +4,7 @@ var vscode = require( 'vscode' );
 var path = require( 'path' );
 
 var nodes = [];
-var buildCounter = 1;
-var nodeCounter = 1;
+var expandedNodes = {};
 
 var isVisible = function( e )
 {
@@ -26,6 +25,27 @@ var getProperty = function( object, path )
     return o && o[ p ];
 };
 
+function forEach( callback, children )
+{
+    if( children === undefined )
+    {
+        children = nodes;
+    }
+    children.forEach( child =>
+    {
+        if( child.nodes !== undefined )
+        {
+            forEach( callback, child.nodes );
+        }
+        callback( child );
+    } );
+}
+
+function expandPath( path )
+{
+    return path.join( "." );
+}
+
 class TreeNodeProvider
 {
     constructor( _context, _structure )
@@ -35,6 +55,8 @@ class TreeNodeProvider
 
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+        expandedNodes = _context.workspaceState.get( 'expandedNodes', {} );
     }
 
     getChildren( node )
@@ -70,8 +92,16 @@ class TreeNodeProvider
         var treeItem = new vscode.TreeItem( node.label ? node.label : node.value );
 
         treeItem.id = node.id;
+        treeItem.tooltip = node.id;
 
-        treeItem.collapsibleState = node.nodes && node.nodes.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+        if( node.nodes.length > 0 )
+        {
+            treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+            if( expandedNodes[ node.id ] !== undefined )
+            {
+                treeItem.collapsibleState = ( expandedNodes[ node.id ] === true ) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
+            }
+        }
 
         if( node.icon !== undefined )
         {
@@ -143,13 +173,18 @@ class TreeNodeProvider
         var locateNode = function( node )
         {
             return node.type === this.type && node.value === this.value;
-        }
+        };
 
-        data.map( function( item )
+        forEach( function( node ) { node.delete = true; }, nodes );
+
+        var counters = Array( this._structure.length ).fill( 0 );
+
+        data.map( function( item, index )
         {
             var entry = item.details;
             var parent;
             var parents = nodes;
+
             for( var level = 0; level < this._structure.length; ++level )
             {
                 var children = this._structure[ level ].children;
@@ -179,11 +214,28 @@ class TreeNodeProvider
 
                         if( node === undefined )
                         {
+                            counters.forEach( function( value, index, replace )
+                            {
+                                if( index === level )
+                                {
+                                    replace[ index ] = ++value;
+                                }
+                                else if( index > level )
+                                {
+                                    replace[ index ] = 0;
+                                }
+                            } );
+
+                            if( expandPath( counters.slice( 0, level + 1 ) ) === "2.2" )
+                            {
+                                console.log( "wtf" );
+                            }
+
                             node = {
                                 level: level,
                                 value: value,
                                 type: child.property,
-                                id: ( buildCounter * 1000000 ) + nodeCounter++,
+                                id: expandPath( counters.slice( 0, level + 1 ) ),
                                 visible: true,
                                 nodes: []
                             };
@@ -214,6 +266,10 @@ class TreeNodeProvider
                                 parent.nodes.push( node );
                             }
                         }
+                        else
+                        {
+                            node.delete = false;
+                        }
                     }
                 }, this );
                 if( level > 0 && parent !== undefined )
@@ -222,6 +278,57 @@ class TreeNodeProvider
                 }
             }
         }, this );
+
+        this.prune();
+    }
+
+    prune( children )
+    {
+        function removeDeletedNodes( children, me )
+        {
+            return children.filter( function( child )
+            {
+                if( child.nodes !== undefined )
+                {
+                    child.nodes = me.prune( child.nodes );
+                }
+                var shouldRemove = child.delete === true;
+                if( shouldRemove === true )
+                {
+                    delete expandedNodes[ child.id ];
+                }
+                return shouldRemove === false;
+            }, me );
+        }
+
+        var root;
+
+        if( children === undefined )
+        {
+            root = true;
+            children = nodes;
+        }
+
+        children = removeDeletedNodes( children, this );
+
+        if( root === true )
+        {
+            nodes = children;
+        }
+
+        return children;
+    }
+
+    setExpanded( path, expanded )
+    {
+        expandedNodes[ path ] = expanded;
+        this._context.workspaceState.update( 'expandedNodes', expandedNodes );
+    }
+
+    clearExpansionState()
+    {
+        expandedNodes = {};
+        this._context.workspaceState.update( 'expandedNodes', expandedNodes );
     }
 }
 
