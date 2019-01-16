@@ -28,6 +28,8 @@ If you find this extension useful, please feel free to donate <a href="https://p
 
 Icon from wikipedia - attribution: By Original uploader was Leucosticte at MediaWiki - Transferred from MediaWiki, Public Domain, https://commons.wikimedia.org/w/index.php?curid=27361356
 
+Building icon made by <a href="https://www.flaticon.com/authors/bogdan-rosu" title="Bogdan Rosu">Bogdan Rosu</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
+
 Score icons license: Apache 2.0
 
 Verfied/Failed icons license: http://creativecommons.org/licenses/by-sa/3.0/

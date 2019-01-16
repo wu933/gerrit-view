@@ -89,11 +89,12 @@ function activate( context )
         icons.subject = function( entry )
         {
             var name;
+            var built = false;
+            var finished = false;
+            var score = 0;
+
             if( entry.currentPatchSet && entry.currentPatchSet.approvals !== undefined )
             {
-                var score = 0;
-                var finished = false;
-
                 entry.currentPatchSet.approvals.map( function( approval )
                 {
                     if( finished === false )
@@ -102,6 +103,7 @@ function activate( context )
 
                         if( approval.type === "Verified" )
                         {
+                            built = true;
                             if( approvalScore === -1 )
                             {
                                 name = "failed";
@@ -130,7 +132,14 @@ function activate( context )
                         }
                     }
                 } );
+            }
 
+            if( built === false )
+            {
+                name = "building";
+            }
+            else
+            {
                 switch( score )
                 {
                     case 2: name = "plus-two"; break;
@@ -138,6 +147,7 @@ function activate( context )
                     case -1: name = "minus-one"; break;
                 }
             }
+
             return name;
         };
 
