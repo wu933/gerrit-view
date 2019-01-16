@@ -49,26 +49,35 @@ module.exports.query = function query( command, options )
 
     return new Promise( function( resolve, reject )
     {
-        var currentProcess = child_process.exec( execString );
+        // The default for omitting maxBuffer, according to Node docs, is 200kB.
+        // We'll explicitly give that here if a custom value is not provided.
+        // Note that our options value is in KB, so we have to convert to bytes.
+        const maxBuffer = ( options.maxBuffer || 200 ) * 1024;
+        var currentProcess = child_process.exec( execString, { maxBuffer } );
+
         var results = "";
 
         currentProcess.stdout.on( 'data', function( data )
         {
-            debug( data );
             results += data;
         } );
 
         currentProcess.stderr.on( 'data', function( data )
         {
-            debug( data )
             reject( new GerritError( data, "" ) );
         } );
 
         currentProcess.on( 'close', function( code )
         {
-            resolve( formatResults( results, debug ) );
+            if( code === 0 )
+            {
+                resolve( formatResults( results, debug ) );
+            }
+            else
+            {
+                reject( new GerritError( "Too many results - try using the 'limit:<n>' option, or increasing 'gerrit-view.bufferSize'.", "" ) );
+            }
         } );
-
     } );
 };
 
