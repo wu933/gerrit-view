@@ -41,11 +41,6 @@ function forEach( callback, children )
     } );
 }
 
-function expandPath( path )
-{
-    return path.join( "." );
-}
-
 class TreeNodeProvider
 {
     constructor( _context, _structure )
@@ -177,7 +172,7 @@ class TreeNodeProvider
 
         forEach( function( node ) { node.delete = true; }, nodes );
 
-        var counters = Array( this._structure.length ).fill( 0 );
+        var rootCounter = 1;
 
         data.map( function( item, index )
         {
@@ -191,6 +186,7 @@ class TreeNodeProvider
                 children.map( function( child )
                 {
                     var value = getProperty( entry, child.property );
+
                     if( value !== undefined )
                     {
                         var node;
@@ -214,28 +210,11 @@ class TreeNodeProvider
 
                         if( node === undefined )
                         {
-                            counters.forEach( function( value, index, replace )
-                            {
-                                if( index === level )
-                                {
-                                    replace[ index ] = ++value;
-                                }
-                                else if( index > level )
-                                {
-                                    replace[ index ] = 0;
-                                }
-                            } );
-
-                            if( expandPath( counters.slice( 0, level + 1 ) ) === "2.2" )
-                            {
-                                console.log( "wtf" );
-                            }
-
                             node = {
                                 level: level,
                                 value: value,
                                 type: child.property,
-                                id: expandPath( counters.slice( 0, level + 1 ) ),
+                                id: parent ? ( parent.id + "." + ( parent.nodes.length + 1 ) ) : ( rootCounter++ ).toString(),
                                 visible: true,
                                 nodes: []
                             };
