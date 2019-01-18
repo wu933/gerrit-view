@@ -6,6 +6,11 @@ var path = require( 'path' );
 var nodes = [];
 var expandedNodes = {};
 
+function isArray( object )
+{
+    return Object.prototype.toString.call( object ) === '[object Array]';
+}
+
 var isVisible = function( e )
 {
     return e.visible === true;
@@ -18,10 +23,11 @@ var getProperty = function( object, path )
     var dot = p.indexOf( "." );
     while( o && dot > -1 )
     {
-        o = object[ p.substr( 0, dot ) ];
+        o = o[ p.substr( 0, dot ) ];
         p = p.substr( dot + 1 );
         dot = p.indexOf( "." );
     }
+
     return o && o[ p ];
 };
 
@@ -172,8 +178,6 @@ class TreeNodeProvider
 
         forEach( function( node ) { node.delete = true; }, nodes );
 
-        var rootCounter = 1;
-
         data.map( function( item, index )
         {
             var entry = item.details;
@@ -214,7 +218,7 @@ class TreeNodeProvider
                                 level: level,
                                 value: value,
                                 type: child.property,
-                                id: parent ? ( parent.id + "." + ( parent.nodes.length + 1 ) ) : ( rootCounter++ ).toString(),
+                                id: parent ? ( parent.id + "." + value ) : value,
                                 visible: true,
                                 nodes: []
                             };
