@@ -2,6 +2,10 @@
 
 var vscode = require( 'vscode' );
 var path = require( 'path' );
+var fs = require( 'fs' );
+var octicons = require( 'octicons' );
+
+var storageLocation;
 
 var nodes = [];
 var expandedNodes = {};
@@ -54,10 +58,24 @@ class TreeNodeProvider
         this._context = _context;
         this._structure = _structure;
 
+        console.log( JSON.stringify( _structure ) );
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
         expandedNodes = _context.workspaceState.get( 'expandedNodes', {} );
+
+        if( _context.storagePath && !fs.existsSync( _context.storagePath ) )
+        {
+            fs.mkdirSync( _context.storagePath );
+        }
+        if( fs.existsSync( _context.storagePath ) )
+        {
+            storageLocation = _context.storagePath;
+        }
+        else
+        {
+            storageLocation = _context.extensionPath;
+        }
     }
 
     getChildren( node )
@@ -93,7 +111,7 @@ class TreeNodeProvider
         var treeItem = new vscode.TreeItem( node.label ? node.label : node.value );
 
         treeItem.id = node.id;
-        treeItem.tooltip = node.id;
+        treeItem.tooltip = node.id + " " + node.octicon;
 
         if( node.nodes.length > 0 )
         {
@@ -104,7 +122,14 @@ class TreeNodeProvider
             }
         }
 
-        if( node.icon !== undefined )
+        if( node.octicon !== undefined )
+        {
+            treeItem.iconPath = {
+                dark: node.octicon,
+                light: node.octicon
+            };
+        }
+        else if( node.icon !== undefined )
         {
             var darkIconPath = this._context.asAbsolutePath( path.join( "resources/icons", "dark", node.icon + ".svg" ) );
             var lightIconPath = this._context.asAbsolutePath( path.join( "resources/icons", "light", node.icon + ".svg" ) );
@@ -234,9 +259,29 @@ class TreeNodeProvider
                                 node.label = label;
                             }
 
-                            if( icons[ child.property ] !== undefined )
+                            if( child.icon )
                             {
-                                node.icon = icons[ child.property ]( entry );
+                                if( octicons[ child.icon ] )
+                                {
+                                    console.log( "CHILD:" + JSON.stringify( child ) );
+                                    var colour = new vscode.ThemeColor( "foreground" );
+                                    var octiconIconPath = path.join( storageLocation, child.icon + ".svg" );
+
+                                    if( !fs.existsSync( octiconIconPath ) )
+                                    {
+                                        var octiconIconDefinition = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
+                                            octicons[ child.icon ].toSVG( { "xmlns": "http://www.w3.org/2000/svg", "fill": "#C5C5C5", "viewBox": "0 -1 10 18" } );
+
+                                        fs.writeFileSync( octiconIconPath, octiconIconDefinition );
+                                    }
+
+                                    node.octicon = octiconIconPath;
+                                }
+
+                                else if( icons[ child.icon ] !== undefined )
+                                {
+                                    node.icon = icons[ child.icon ]( entry );
+                                }
                             }
 
                             if( level === 0 )

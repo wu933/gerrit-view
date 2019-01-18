@@ -142,6 +142,7 @@
         }
     },
     "dependencies": {
-        "micromatch": "^3.1.10"
+        "micromatch": "^3.1.10",
+        "octicons": "^7.4.0"
     }
 }

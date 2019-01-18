@@ -85,7 +85,7 @@ function activate( context )
     function getGerritData()
     {
         var icons = {};
-        icons.subject = function( entry )
+        icons.score = function( entry )
         {
             var name;
             var built = false;
