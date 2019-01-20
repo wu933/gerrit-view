@@ -9,10 +9,30 @@ var storageLocation;
 
 var nodes = [];
 var expandedNodes = {};
+var hashes = {};
 
 function isArray( object )
 {
     return Object.prototype.toString.call( object ) === '[object Array]';
+}
+
+function hash( text )
+{
+    var hash = 0;
+    if( text.length === 0 )
+    {
+        return hash;
+    }
+    for( var i = 0; i < text.length; i++ )
+    {
+        var char = text.charCodeAt( i );
+        hash = ( ( hash << 5 ) - hash ) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+
+    hash = Math.abs( hash ) % 1000000;
+
+    return hash;
 }
 
 var isVisible = function( e )
@@ -194,12 +214,15 @@ class TreeNodeProvider
         }, this );
     }
 
-    populate( data, icons )
+    populate( data, icons, keyField )
     {
         var locateNode = function( node )
         {
             return node.type === this.type && node.value === this.value;
         };
+
+        var changed = [];
+        var firstRun = Object.keys( hashes ).length === 0;
 
         forEach( function( node ) { node.delete = true; }, nodes );
 
@@ -208,6 +231,21 @@ class TreeNodeProvider
             var entry = item.details;
             var parent;
             var parents = nodes;
+
+            if( keyField !== undefined )
+            {
+                var key = getProperty( entry, keyField );
+
+                var newHash = hash( JSON.stringify( entry ) );
+                if( hashes[ key ] != newHash )
+                {
+                    if( firstRun === false )
+                    {
+                        changed.push( key );
+                    }
+                }
+                hashes[ key ] = newHash;
+            }
 
             for( var level = 0; level < this._structure.length; ++level )
             {
@@ -263,7 +301,6 @@ class TreeNodeProvider
                             {
                                 if( octicons[ child.icon ] )
                                 {
-                                    console.log( "CHILD:" + JSON.stringify( child ) );
                                     var colour = new vscode.ThemeColor( "foreground" );
                                     var octiconIconPath = path.join( storageLocation, child.icon + ".svg" );
 
@@ -308,6 +345,8 @@ class TreeNodeProvider
         }, this );
 
         this.prune();
+
+        return changed;
     }
 
     prune( children )

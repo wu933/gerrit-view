@@ -9,11 +9,11 @@ function activate( context )
 {
     var structure = [
         {
-            children: [ { property: "project" } ]
+            children: [ { property: "project", icon: "briefcase" } ]
         },
         {
             parent: "project",
-            children: [ { property: "branch", format: "branch: ${branch}" } ],
+            children: [ { property: "branch", format: "branch: ${branch}", icon: "git-branch" } ],
         },
         {
             parent: "branch",
@@ -21,11 +21,11 @@ function activate( context )
         },
         {
             parent: "status",
-            children: [ { property: "subject" } ]
+            children: [ { property: "subject", icon: "score" } ]
         },
         {
             parent: "subject",
-            children: [ { property: "number" }, { property: "owner.username" } ],
+            children: [ { property: "number" }, { property: "owner.username" }, { property: "currentPatchSet.approvals.by" } ],
         },
         {
             parent: "owner.username",
@@ -164,7 +164,13 @@ function activate( context )
                 {
                     debug( "entry: " + JSON.stringify( result, null, 2 ) );
                 } );
-                provider.populate( results, icons );
+                var changed = provider.populate( results, icons, "number" );
+
+                if( changed.length > 0 )
+                {
+                    vscode.window.showInformationMessage( "gerrit-view: Updated change sets: " + changed.join( "," ) );
+                }
+
                 refresh();
             }
             else
