@@ -88,6 +88,11 @@
                     "dark": "resources/icons/dark/clear-filter.svg",
                     "light": "resources/icons/light/clear-filter.svg"
                 }
+            },
+            {
+                "command": "gerrit-view.select",
+                "title": "Select Entry",
+                "category": "Gerrit View"
             }
         ],
         "configuration": {

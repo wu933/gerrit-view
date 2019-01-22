@@ -21,7 +21,7 @@ function activate( context )
         },
         {
             parent: "status",
-            children: [ { property: "subject", icon: "score" } ]
+            children: [ { property: "subject", icon: "score", showChanged: true, format: "${number} ${subject}" } ]
         },
         {
             parent: "subject",
@@ -82,7 +82,7 @@ function activate( context )
         refresh();
     }
 
-    function getGerritData()
+    function getGerritData( refreshRequired )
     {
         var icons = {};
         icons.score = function( entry )
@@ -171,7 +171,10 @@ function activate( context )
                     vscode.window.showInformationMessage( "gerrit-view: Updated change sets: " + changed.join( "," ) );
                 }
 
-                refresh();
+                if( refreshRequired )
+                {
+                    refresh();
+                }
             }
             else
             {
@@ -205,8 +208,14 @@ function activate( context )
                 } );
         } ) );
 
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>
+        {
+            node.changed = false;
+            provider.refresh();
+        } ) );
+
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filterClear', clearFilter ) );
-        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.refresh', getGerritData ) );
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.refresh', function() { getGerritData( true ) } ) );
 
         context.subscriptions.push( gerritView.onDidExpandElement( function( e ) { provider.setExpanded( e.element.id, true ); } ) );
         context.subscriptions.push( gerritView.onDidCollapseElement( function( e ) { provider.setExpanded( e.element.id, false ); } ) );
@@ -221,7 +230,7 @@ function activate( context )
                 }
                 else
                 {
-                    getGerritData();
+                    getGerritData( true );
                 }
 
                 vscode.commands.executeCommand( 'setContext', 'gerrit-view-in-explorer', vscode.workspace.getConfiguration( 'gerrit-view' ).showInExplorer );
@@ -237,7 +246,7 @@ function activate( context )
 
         setContext();
 
-        getGerritData();
+        getGerritData( false );
     }
 
     register();

@@ -78,7 +78,6 @@ class TreeNodeProvider
         this._context = _context;
         this._structure = _structure;
 
-        console.log( JSON.stringify( _structure ) );
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -133,7 +132,13 @@ class TreeNodeProvider
         treeItem.id = node.id;
         treeItem.tooltip = node.id + " " + node.octicon;
 
-        if( node.nodes.length > 0 )
+        if( node.showChanged === true && node.changed !== true )
+        {
+            treeItem.description = treeItem.label;
+            treeItem.label = "";
+        }
+
+        if( node.nodes && node.nodes.length > 0 )
         {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
             if( expandedNodes[ node.id ] !== undefined )
@@ -159,6 +164,12 @@ class TreeNodeProvider
                 light: lightIconPath
             };
         }
+
+        treeItem.command = {
+            command: "gerrit-view.select",
+            title: "",
+            arguments: [ node ]
+        };
 
         return treeItem;
     }
@@ -231,20 +242,27 @@ class TreeNodeProvider
             var entry = item.details;
             var parent;
             var parents = nodes;
+            var hasChanged = false;
+
+            var key;
 
             if( keyField !== undefined )
             {
-                var key = getProperty( entry, keyField );
+                key = getProperty( entry, keyField );
 
-                var newHash = hash( JSON.stringify( entry ) );
-                if( hashes[ key ] != newHash )
+                if( key !== undefined )
                 {
-                    if( firstRun === false )
+                    var newHash = hash( JSON.stringify( entry ) );
+                    if( hashes[ key ] != newHash )
                     {
-                        changed.push( key );
+                        if( firstRun === false )
+                        {
+                            changed.push( key );
+                            hasChanged = true;
+                        }
                     }
+                    hashes[ key ] = newHash;
                 }
-                hashes[ key ] = newHash;
             }
 
             for( var level = 0; level < this._structure.length; ++level )
@@ -286,6 +304,11 @@ class TreeNodeProvider
                                 nodes: []
                             };
 
+                            if( child.showChanged )
+                            {
+                                node.key = key;
+                                node.showChanged = true;
+                            }
                             if( child.format !== undefined )
                             {
                                 var label = child.format;
@@ -333,6 +356,10 @@ class TreeNodeProvider
                         }
                         else
                         {
+                            if( hasChanged )
+                            {
+                                node.changed = true;
+                            }
                             node.delete = false;
                         }
                     }
@@ -386,9 +413,9 @@ class TreeNodeProvider
         return children;
     }
 
-    setExpanded( path, expanded )
+    setExpanded( id, expanded )
     {
-        expandedNodes[ path ] = expanded;
+        expandedNodes[ id ] = expanded;
         this._context.workspaceState.update( 'expandedNodes', expandedNodes );
     }
 
