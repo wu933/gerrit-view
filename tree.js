@@ -165,6 +165,11 @@ class TreeNodeProvider
             };
         }
 
+        if( node.hasContextMenu )
+        {
+            treeItem.contextValue = "showMenu";
+        }
+
         treeItem.command = {
             command: "gerrit-view.select",
             title: "",
@@ -305,6 +310,12 @@ class TreeNodeProvider
                                 visible: true,
                                 nodes: []
                             };
+
+                            if( child.hasContextMenu )
+                            {
+                                node.hasContextMenu = true;
+                                node.entry = entry;
+                            }
 
                             if( child.showChanged )
                             {

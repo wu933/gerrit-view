@@ -23,7 +23,7 @@ function activate( context )
         },
         {
             parent: "status",
-            children: [ { property: "subject", icon: "score", showChanged: true, format: "${number} ${subject}" } ]
+            children: [ { property: "subject", icon: "score", showChanged: true, format: "${number} ${subject}", hasContextMenu: true } ]
         },
         {
             parent: "subject",
@@ -231,6 +231,11 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filterClear', clearFilter ) );
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.refresh', function() { getGerritData( true ) } ) );
+
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.openInBrowser', function( item )
+        {
+            vscode.commands.executeCommand( 'vscode.open', vscode.Uri.parse( item.entry.url ) );
+        } ) );
 
         context.subscriptions.push( gerritView.onDidExpandElement( function( e ) { provider.setExpanded( e.element.id, true ); } ) );
         context.subscriptions.push( gerritView.onDidCollapseElement( function( e ) { provider.setExpanded( e.element.id, false ); } ) );

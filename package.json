@@ -50,6 +50,12 @@
                     "when": "view =~ /gerrit-view/",
                     "group": "navigation@2"
                 }
+            ],
+            "view/item/context": [
+                {
+                    "command": "gerrit-view.openInBrowser",
+                    "when": "view =~ /gerrit-view/ && viewItem == showMenu"
+                }
             ]
         },
         "commands": [
@@ -92,6 +98,11 @@
             {
                 "command": "gerrit-view.select",
                 "title": "Select Entry",
+                "category": "Gerrit View"
+            },
+            {
+                "command": "gerrit-view.openInBrowser",
+                "title": "Open the change set in a browser window",
                 "category": "Gerrit View"
             }
         ],
