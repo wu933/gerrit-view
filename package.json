@@ -139,9 +139,9 @@
                     "markdownDescription": "Set to true if you want the view filtering to be case sensitive"
                 },
                 "gerrit-view.autoRefresh": {
-                    "type": "boolean",
-                    "default": true,
-                    "markdownDescription": "Refresh the tree periodically"
+                    "type": "number",
+                    "default": 30,
+                    "markdownDescription": "Automatically refresh the tree after this many seconds. Set to 0 to disable."
                 }
             }
         }

@@ -5,6 +5,8 @@ var gerrit = require( './gerrit.js' );
 
 var tree = require( "./tree.js" );
 
+var autoRefresh;
+
 function activate( context )
 {
     var structure = [
@@ -161,10 +163,6 @@ function activate( context )
             if( results.length > 0 )
             {
                 // results = results.slice( 0, 1 );
-                results.forEach( result =>
-                {
-                    debug( "entry: " + JSON.stringify( result, null, 2 ) );
-                } );
 
                 var changed = provider.populate( results, icons, "number" );
 
@@ -173,7 +171,7 @@ function activate( context )
                     vscode.window.showInformationMessage( "gerrit-view: Updated change sets: " + changed.join( "," ) );
                 }
 
-                if( refreshRequired )
+                if( refreshRequired === true )
                 {
                     console.log( "refresh..." );
                     refresh();
@@ -192,6 +190,20 @@ function activate( context )
             }
             vscode.window.showErrorMessage( "gerrit-view: " + message );
         } );
+
+        debug( "Last update: " + new Date().toISOString() );
+    }
+
+    function setAutoRefresh()
+    {
+        var interval = parseInt( vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'autoRefresh' ) );
+
+        clearInterval( autoRefresh );
+
+        if( interval !== NaN && interval > 0 )
+        {
+            autoRefresh = setInterval( getGerritData, interval * 1000 );
+        }
     }
 
     function register()
@@ -231,6 +243,10 @@ function activate( context )
                 {
                     resetOutputChannel();
                 }
+                else if( e.affectsConfiguration( "gerrit-view.autoRefresh" ) )
+                {
+                    setAutoRefresh();
+                }
                 else
                 {
                     getGerritData( true );
@@ -250,6 +266,8 @@ function activate( context )
         setContext();
 
         getGerritData( false );
+
+        setAutoRefresh();
     }
 
     register();

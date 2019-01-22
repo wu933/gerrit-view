@@ -310,7 +310,7 @@ class TreeNodeProvider
                             {
                                 node.key = key;
                                 node.showChanged = true;
-                                node.changed = ( key == "4077" );
+                                node.changed = ( firstRun === false );
                             }
 
                             if( child.format !== undefined )
