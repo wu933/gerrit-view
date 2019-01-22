@@ -155,6 +155,7 @@ function activate( context )
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
         var query = "ssh -p " + config.get( "port" ) + " " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
 
+        console.log( "Running gerrit query: " + query );
         gerrit.query( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
         {
             if( results.length > 0 )
@@ -164,6 +165,7 @@ function activate( context )
                 {
                     debug( "entry: " + JSON.stringify( result, null, 2 ) );
                 } );
+
                 var changed = provider.populate( results, icons, "number" );
 
                 if( changed.length > 0 )
@@ -173,6 +175,7 @@ function activate( context )
 
                 if( refreshRequired )
                 {
+                    console.log( "refresh..." );
                     refresh();
                 }
             }

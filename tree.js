@@ -257,6 +257,7 @@ class TreeNodeProvider
                     {
                         if( firstRun === false )
                         {
+                            console.log( "Changed:" + key );
                             changed.push( key );
                             hasChanged = true;
                         }
@@ -295,6 +296,7 @@ class TreeNodeProvider
 
                         if( node === undefined )
                         {
+                            console.log( "new node:" + value );
                             node = {
                                 level: level,
                                 value: value,
@@ -308,7 +310,9 @@ class TreeNodeProvider
                             {
                                 node.key = key;
                                 node.showChanged = true;
+                                node.changed = ( key == "4077" );
                             }
+
                             if( child.format !== undefined )
                             {
                                 var label = child.format;
@@ -371,7 +375,10 @@ class TreeNodeProvider
             }
         }, this );
 
+        console.log( "pruning" );
         this.prune();
+
+        console.log( "changed:" + changed.length );
 
         return changed;
     }
