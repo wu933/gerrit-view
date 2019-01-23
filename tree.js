@@ -11,6 +11,8 @@ var nodes = [];
 var expandedNodes = {};
 var hashes = {};
 
+var showChanged = false;
+
 function isArray( object )
 {
     return Object.prototype.toString.call( object ) === '[object Array]';
@@ -37,7 +39,8 @@ function hash( text )
 
 var isVisible = function( e )
 {
-    return e.visible === true;
+    var result = e.visible === true && ( showChanged === false || e.changed === true );
+    return result;
 };
 
 var getProperty = function( object, path )
@@ -95,6 +98,8 @@ class TreeNodeProvider
         {
             storageLocation = _context.extensionPath;
         }
+
+        showChanged = _context.workspaceState.get( 'showChanged', false );
     }
 
     getChildren( node )
@@ -130,7 +135,6 @@ class TreeNodeProvider
         var treeItem = new vscode.TreeItem( node.label ? node.label : node.value );
 
         treeItem.id = node.id;
-        treeItem.tooltip = node.id + " " + node.octicon;
 
         if( node.showChanged === true && node.changed !== true )
         {
@@ -168,6 +172,11 @@ class TreeNodeProvider
         if( node.hasContextMenu )
         {
             treeItem.contextValue = "showMenu";
+        }
+
+        if( node.tooltip )
+        {
+            treeItem.tooltip = JSON.stringify( node.tooltip, null, 2 );
         }
 
         treeItem.command = {
@@ -262,7 +271,6 @@ class TreeNodeProvider
                     {
                         if( firstRun === false )
                         {
-                            console.log( "Changed:" + key );
                             changed.push( key );
                             hasChanged = true;
                         }
@@ -310,6 +318,11 @@ class TreeNodeProvider
                                 visible: true,
                                 nodes: []
                             };
+
+                            if( child.tooltip )
+                            {
+                                node.tooltip = getProperty( entry, child.tooltip );
+                            }
 
                             if( child.hasContextMenu )
                             {
@@ -441,6 +454,18 @@ class TreeNodeProvider
     {
         expandedNodes = {};
         this._context.workspaceState.update( 'expandedNodes', expandedNodes );
+    }
+
+    showAll()
+    {
+        showChanged = false;
+        this.refresh();
+    }
+
+    showChanged()
+    {
+        showChanged = true;
+        this.refresh();
     }
 }
 
