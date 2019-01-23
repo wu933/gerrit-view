@@ -11,27 +11,42 @@ function activate( context )
 {
     var structure = [
         {
-            children: [ { property: "project", icon: "briefcase" } ]
+            children: [
+                { property: "project", icon: "briefcase" }
+            ]
         },
         {
             parent: "project",
-            children: [ { property: "branch", format: "branch: ${branch}", icon: "git-branch" } ],
+            children: [
+                { property: "branch", format: "branch: ${branch}", icon: "git-branch" } ]
+            ,
         },
         {
             parent: "branch",
-            children: [ { property: "status" } ]
+            children: [
+                { property: "status" }
+            ]
         },
         {
             parent: "status",
-            children: [ { property: "subject", icon: "score", showChanged: true, format: "${number} ${subject}", hasContextMenu: true, tooltip: "currentPatchSet.approvals" } ]
+            children: [
+                { property: "subject", icon: "score", showChanged: true, format: "${number} ${subject}", hasContextMenu: true, tooltip: "currentPatchSet.approvals" }
+            ]
         },
         {
             parent: "subject",
-            children: [ { property: "number" }, { property: "owner.username" }, { property: "currentPatchSet.approvals.by" } ],
+            children: [
+                { property: "number" },
+                { property: "owner.username", format: "Owner: ${owner.username}" },
+                { property: "currentPatchSet.approvals.by.name", format: "${currentPatchSet.approvals.value} ${currentPatchSet.approvals.by.name}" }
+            ],
         },
         {
             parent: "owner.username",
-            children: [ { property: "owner.name" }, { property: "owner.email" } ],
+            children: [
+                { property: "owner.name" },
+                { property: "owner.email" }
+            ],
         }
     ];
 
@@ -209,7 +224,7 @@ function activate( context )
 
         clearInterval( autoRefresh );
 
-        if( interval !== NaN && interval > 0 )
+        if( !isNaN( interval ) && interval > 0 )
         {
             autoRefresh = setInterval( getGerritData, interval * 1000 );
         }

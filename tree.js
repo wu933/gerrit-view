@@ -43,19 +43,69 @@ var isVisible = function( e )
     return result;
 };
 
-var getProperty = function( object, path )
+var append = function( target, source )
 {
+    return target.length > 0 ? target + "." + source : source;
+};
+
+var getProperties = function( object, path, results, expandedPath, indexes )
+{
+    if( results === undefined )
+    {
+        results = [];
+        indexes = "";
+        expandedPath = "";
+    }
+
+    var o = object;
+    var p = path;
+    var dot = p.indexOf( "." );
+    while( o && dot > -1 )
+    {
+        var subPath = p.substr( 0, dot );
+        expandedPath = append( expandedPath, subPath );
+        o = o[ subPath ];
+        if( isArray( o ) )
+        {
+            o.map( function( c, index )
+            {
+                getProperties( c, p.substr( dot + 1 ), results, expandedPath + "[" + index + "]", ( indexes + " " + index ).trim() );
+            } );
+        }
+        else
+        {
+            p = p.substr( dot + 1 );
+            dot = p.indexOf( "." );
+        }
+    }
+
+    expandedPath = append( expandedPath, p );
+    if( o && o[ p ] )
+    {
+        results.push( { value: o[ p ], indexes: indexes, path: expandedPath } );
+    }
+
+    return results;
+};
+
+var getUniqueProperty = function( object, path, indexes )
+{
+    var indexList = indexes ? indexes.split( " " ) : undefined;
     var o = object;
     var p = path;
     var dot = p.indexOf( "." );
     while( o && dot > -1 )
     {
         o = o[ p.substr( 0, dot ) ];
+        if( isArray( o ) )
+        {
+            o = o[ parseInt( indexList.shift() ) ];
+        }
         p = p.substr( dot + 1 );
         dot = p.indexOf( "." );
     }
 
-    return o && o[ p ];
+    return ( o && o[ p ] );
 };
 
 function forEach( callback, children )
@@ -262,7 +312,7 @@ class TreeNodeProvider
 
             if( keyField !== undefined )
             {
-                key = getProperty( entry, keyField );
+                key = getUniqueProperty( entry, keyField );
 
                 if( key !== undefined )
                 {
@@ -284,9 +334,9 @@ class TreeNodeProvider
                 var children = this._structure[ level ].children;
                 children.map( function( child )
                 {
-                    var value = getProperty( entry, child.property );
+                    var values = getProperties( entry, child.property );
 
-                    if( value !== undefined )
+                    values.map( function( v )
                     {
                         var node;
 
@@ -294,34 +344,34 @@ class TreeNodeProvider
                         {
                             parent = parents.find( locateNode, {
                                 type: this._structure[ level ].parent,
-                                value: getProperty( entry, this._structure[ level ].parent )
+                                value: getUniqueProperty( entry, this._structure[ level ].parent )
                             } );
                         }
 
                         if( parent !== undefined )
                         {
-                            node = parent.nodes.find( locateNode, { type: child.property, value: value } );
+                            node = parent.nodes.find( locateNode, { type: child.property, value: v.value } );
                         }
                         else
                         {
-                            node = nodes.find( locateNode, { type: child.property, value: value } );
+                            node = nodes.find( locateNode, { type: child.property, value: v.value } );
                         }
 
                         if( node === undefined )
                         {
-                            console.log( "new node:" + value );
+                            console.log( "new node:" + v.value );
                             node = {
                                 level: level,
-                                value: value,
+                                value: v.value,
                                 type: child.property,
-                                id: parent ? ( parent.id + "." + value ) : value,
+                                id: parent ? ( parent.id + "." + v.value ) : v.value,
                                 visible: true,
                                 nodes: []
                             };
 
                             if( child.tooltip )
                             {
-                                node.tooltip = getProperty( entry, child.tooltip );
+                                node.tooltip = getUniqueProperty( entry, child.tooltip );
                             }
 
                             if( child.hasContextMenu )
@@ -343,7 +393,7 @@ class TreeNodeProvider
                                 var regex = new RegExp( "\\$\\{(.*?)\\}", "g" );
                                 label = label.replace( regex, function( match, name )
                                 {
-                                    return getProperty( entry, name );
+                                    return getUniqueProperty( entry, name, v.indexes );
                                 } );
                                 node.label = label;
                             }
@@ -390,7 +440,7 @@ class TreeNodeProvider
                             }
                             node.delete = false;
                         }
-                    }
+                    }, this );
                 }, this );
                 if( level > 0 && parent !== undefined )
                 {
