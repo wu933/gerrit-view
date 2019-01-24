@@ -160,10 +160,10 @@ class TreeNodeProvider
             {
                 return node.nodes === undefined || node.nodes.length > 0;
             } );
-            var rootNodes = availableNodes.filter( isVisible );
-            if( rootNodes.length > 0 )
+            var visibleNodes = availableNodes.filter( isVisible );
+            if( visibleNodes.length > 0 )
             {
-                return rootNodes;
+                return visibleNodes;
             }
 
             return [ { label: "Nothing found", empty: availableNodes.length === 0 } ];
@@ -366,7 +366,8 @@ class TreeNodeProvider
                                 type: child.property,
                                 id: parent ? ( parent.id + "." + v.value ) : v.value,
                                 visible: true,
-                                nodes: []
+                                nodes: [],
+                                changed: true
                             };
 
                             if( child.tooltip )
