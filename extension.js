@@ -2,10 +2,18 @@
 
 var vscode = require( 'vscode' );
 var gerrit = require( './gerrit.js' );
-
 var tree = require( "./tree.js" );
+var objectUtils = require( "./objectUtils.js" );
 
 var autoRefresh;
+
+function toString( date )
+{
+    return Intl.DateTimeFormat(
+        'en-GB',
+        { weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }
+    ).format( date );
+}
 
 function activate( context )
 {
@@ -18,8 +26,8 @@ function activate( context )
         {
             parent: "project",
             children: [
-                { property: "branch", format: "branch: ${branch}", icon: "git-branch" } ]
-            ,
+                { property: "branch", format: "branch: ${branch}", icon: "git-branch" }
+            ]
         },
         {
             parent: "branch",
@@ -30,21 +38,22 @@ function activate( context )
         {
             parent: "status",
             children: [
-                { property: "subject", icon: "score", showChanged: true, format: "${number} ${subject}", hasContextMenu: true, tooltip: "currentPatchSet.approvals" }
+                { property: "subject", icon: "overallScore", showChanged: true, format: "${number} ${subject}", hasContextMenu: true, tooltip: "currentPatchSet.approvals" }
             ]
         },
         {
             parent: "subject",
             children: [
-                { property: "number" },
-                { property: "owner.username", format: "Owner: ${owner.username}" },
-                { property: "currentPatchSet.approvals.by.name", format: "${currentPatchSet.approvals.value} ${currentPatchSet.approvals.by.name}" }
+                { property: "currentPatchSet.approvals.by.name", icon: "score" },
+                { property: "id", format: "ID: ${id}" },
+                { property: "createdOn", formatter: "created" },
+                { property: "lastUpdated", formatter: "updated" },
+                { property: "owner.name", format: "Owner: ${owner.name} (${owner.username})" }
             ],
         },
         {
-            parent: "owner.username",
+            parent: "owner.name",
             children: [
-                { property: "owner.name" },
                 { property: "owner.email" }
             ],
         }
@@ -103,7 +112,7 @@ function activate( context )
     function getGerritData( refreshRequired )
     {
         var icons = {};
-        icons.score = function( entry )
+        icons.overallScore = function( entry )
         {
             var name;
             var built = false;
@@ -172,7 +181,35 @@ function activate( context )
             return name;
         };
 
-        // provider.clear();
+        icons.score = function( entry, property )
+        {
+            var value = parseInt( objectUtils.getUniqueProperty( entry, "currentPatchSet.approvals.value", property.indexes ) );
+            var name;
+
+            switch( value )
+            {
+                case -2: name = "minus-two"; break;
+                case -1: name = "minus-one"; break;
+                case 1: name = "plus-one"; break;
+                case 2: name = "plus-two"; break;
+            }
+
+            return name;
+        };
+
+        formatters = {};
+        formatters.created = function( entry )
+        {
+            var date = new Date( 0 );
+            date.setUTCSeconds( parseInt( entry.createdOn ) );
+            return "Created: " + toString( date );
+        };
+        formatters.updated = function( entry )
+        {
+            var date = new Date( 0 );
+            date.setUTCSeconds( parseInt( entry.lastUpdated ) );
+            return "Updated: " + toString( date );
+        };
 
         if( vscode.window.state.focused !== true )
         {
@@ -187,9 +224,7 @@ function activate( context )
         {
             if( results.length > 0 )
             {
-                // results = results.slice( 0, 1 );
-
-                var changed = provider.populate( results, icons, "number" );
+                var changed = provider.populate( results, icons, formatters, "number" );
 
                 if( changed.length > 0 )
                 {

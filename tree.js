@@ -4,6 +4,7 @@ var vscode = require( 'vscode' );
 var path = require( 'path' );
 var fs = require( 'fs' );
 var octicons = require( 'octicons' );
+var objectUtils = require( './objectUtils.js' );
 
 var storageLocation;
 
@@ -12,11 +13,6 @@ var expandedNodes = {};
 var hashes = {};
 
 var showChanged = false;
-
-function isArray( object )
-{
-    return Object.prototype.toString.call( object ) === '[object Array]';
-}
 
 function hash( text )
 {
@@ -41,71 +37,6 @@ var isVisible = function( e )
 {
     var result = e.visible === true && ( showChanged === false || e.changed === true );
     return result;
-};
-
-var append = function( target, source )
-{
-    return target.length > 0 ? target + "." + source : source;
-};
-
-var getProperties = function( object, path, results, expandedPath, indexes )
-{
-    if( results === undefined )
-    {
-        results = [];
-        indexes = "";
-        expandedPath = "";
-    }
-
-    var o = object;
-    var p = path;
-    var dot = p.indexOf( "." );
-    while( o && dot > -1 )
-    {
-        var subPath = p.substr( 0, dot );
-        expandedPath = append( expandedPath, subPath );
-        o = o[ subPath ];
-        if( isArray( o ) )
-        {
-            o.map( function( c, index )
-            {
-                getProperties( c, p.substr( dot + 1 ), results, expandedPath + "[" + index + "]", ( indexes + " " + index ).trim() );
-            } );
-        }
-        else
-        {
-            p = p.substr( dot + 1 );
-            dot = p.indexOf( "." );
-        }
-    }
-
-    expandedPath = append( expandedPath, p );
-    if( o && o[ p ] )
-    {
-        results.push( { value: o[ p ], indexes: indexes, path: expandedPath } );
-    }
-
-    return results;
-};
-
-var getUniqueProperty = function( object, path, indexes )
-{
-    var indexList = indexes ? indexes.split( " " ) : undefined;
-    var o = object;
-    var p = path;
-    var dot = p.indexOf( "." );
-    while( o && dot > -1 )
-    {
-        o = o[ p.substr( 0, dot ) ];
-        if( isArray( o ) )
-        {
-            o = o[ parseInt( indexList.shift() ) ];
-        }
-        p = p.substr( dot + 1 );
-        dot = p.indexOf( "." );
-    }
-
-    return ( o && o[ p ] );
 };
 
 function forEach( callback, children )
@@ -289,7 +220,7 @@ class TreeNodeProvider
         }, this );
     }
 
-    populate( data, icons, keyField )
+    populate( data, icons, formatters, keyField )
     {
         var locateNode = function( node )
         {
@@ -312,7 +243,7 @@ class TreeNodeProvider
 
             if( keyField !== undefined )
             {
-                key = getUniqueProperty( entry, keyField );
+                key = objectUtils.getUniqueProperty( entry, keyField );
 
                 if( key !== undefined )
                 {
@@ -334,7 +265,7 @@ class TreeNodeProvider
                 var children = this._structure[ level ].children;
                 children.map( function( child )
                 {
-                    var values = getProperties( entry, child.property );
+                    var values = objectUtils.getProperties( entry, child.property );
 
                     values.map( function( v )
                     {
@@ -344,7 +275,7 @@ class TreeNodeProvider
                         {
                             parent = parents.find( locateNode, {
                                 type: this._structure[ level ].parent,
-                                value: getUniqueProperty( entry, this._structure[ level ].parent )
+                                value: objectUtils.getUniqueProperty( entry, this._structure[ level ].parent )
                             } );
                         }
 
@@ -371,7 +302,7 @@ class TreeNodeProvider
 
                             if( child.tooltip )
                             {
-                                node.tooltip = getUniqueProperty( entry, child.tooltip );
+                                node.tooltip = objectUtils.getUniqueProperty( entry, child.tooltip );
                             }
 
                             if( child.hasContextMenu )
@@ -387,13 +318,21 @@ class TreeNodeProvider
                                 node.changed = ( firstRun === false );
                             }
 
+                            if( child.formatter !== undefined )
+                            {
+                                if( formatters[ child.formatter ] !== undefined )
+                                {
+                                    node.label = formatters[ child.formatter ]( entry, v );
+                                }
+                            }
+
                             if( child.format !== undefined )
                             {
                                 var label = child.format;
                                 var regex = new RegExp( "\\$\\{(.*?)\\}", "g" );
                                 label = label.replace( regex, function( match, name )
                                 {
-                                    return getUniqueProperty( entry, name, v.indexes );
+                                    return objectUtils.getUniqueProperty( entry, name, v.indexes );
                                 } );
                                 node.label = label;
                             }
@@ -418,7 +357,7 @@ class TreeNodeProvider
 
                                 else if( icons[ child.icon ] !== undefined )
                                 {
-                                    node.icon = icons[ child.icon ]( entry );
+                                    node.icon = icons[ child.icon ]( entry, v );
                                 }
                             }
 
