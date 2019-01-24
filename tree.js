@@ -359,7 +359,6 @@ class TreeNodeProvider
 
                         if( node === undefined )
                         {
-                            console.log( "new node:" + v.value );
                             node = {
                                 level: level,
                                 value: v.value,
@@ -450,10 +449,7 @@ class TreeNodeProvider
             }
         }, this );
 
-        console.log( "pruning" );
         this.prune();
-
-        console.log( "changed:" + changed.length );
 
         return changed;
     }
