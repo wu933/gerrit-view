@@ -132,6 +132,11 @@
                 "command": "gerrit-view.openInBrowser",
                 "title": "Open the change set in a browser window",
                 "category": "Gerrit View"
+            },
+            {
+                "command": "gerrit-view.setQuery",
+                "title": "Set Query",
+                "category": "Gerrit View"
             }
         ],
         "configuration": {

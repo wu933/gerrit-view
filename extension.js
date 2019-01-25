@@ -97,6 +97,7 @@ function activate( context )
 
     function refresh()
     {
+        console.log( "refresh" );
         provider.refresh();
         setContext();
     }
@@ -164,6 +165,8 @@ function activate( context )
                 } );
             }
 
+            console.log( entry.number + " built:" + built + " score:" + score );
+
             if( built === false )
             {
                 name = "building";
@@ -222,15 +225,18 @@ function activate( context )
         console.log( "Running gerrit query: " + query );
         gerrit.query( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
         {
+            console.log( "results:" + results.length );
             if( results.length > 0 )
             {
                 var changed = provider.populate( results, icons, formatters, "number" );
 
+                console.log( "changed:" + changed.length );
                 if( changed.length > 0 )
                 {
                     vscode.window.showInformationMessage( "gerrit-view: Updated change sets: " + changed.join( "," ) );
                 }
 
+                console.log( "refreshRequired:" + refreshRequired );
                 if( refreshRequired !== false )
                 {
                     refresh();
@@ -312,6 +318,18 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showChanged', showChanged ) );
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showAll', showAll ) );
+
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.setQuery', function()
+        {
+            var currentQuery = vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'query' );
+            vscode.window.showInputBox( { prompt: "Gerrit Query", placeholder: "e.g. status:open", value: currentQuery } ).then( function( query )
+            {
+                if( query )
+                {
+                    vscode.workspace.getConfiguration( 'gerrit-view' ).update( 'query', query, false ).then( refresh );
+                }
+            } );
+        } ) );
 
         context.subscriptions.push( gerritView.onDidExpandElement( function( e ) { provider.setExpanded( e.element.id, true ); } ) );
         context.subscriptions.push( gerritView.onDidCollapseElement( function( e ) { provider.setExpanded( e.element.id, false ); } ) );

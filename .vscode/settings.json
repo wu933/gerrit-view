@@ -10,5 +10,6 @@
         "activityBar.background": "#08351A",
         "titleBar.activeBackground": "#0B4B24",
         "titleBar.activeForeground": "#F0FDF5"
-    }
+    },
+    "gerrit-view.query": "status:open author:nscott"
 }

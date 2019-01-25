@@ -117,6 +117,8 @@ class TreeNodeProvider
 
         treeItem.id = node.id;
 
+        console.log( "creating tree item " + node.id );
+
         if( node.showChanged === true && node.changed !== true )
         {
             treeItem.description = treeItem.label;
@@ -176,6 +178,7 @@ class TreeNodeProvider
 
     refresh()
     {
+        console.log( "provider.refresh" );
         this._onDidChangeTreeData.fire();
     }
 
@@ -224,6 +227,7 @@ class TreeNodeProvider
     {
         var locateNode = function( node )
         {
+            console.log( " " + node.type + "=" + this.type + " ? " + ( node.type === this.type ) + " " + node.value + "=" + this.value + " ? " + ( node.value === this.value ) );
             return node.type === this.type && node.value === this.value;
         };
 
@@ -294,11 +298,13 @@ class TreeNodeProvider
                                 level: level,
                                 value: v.value,
                                 type: child.property,
-                                id: parent ? ( parent.id + "." + v.value ) : v.value,
+                                id: child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ),
                                 visible: true,
                                 nodes: [],
                                 changed: true
                             };
+
+                            console.log( "new node:" + node.id + "(type:" + child.property + ")" );
 
                             if( child.tooltip )
                             {
