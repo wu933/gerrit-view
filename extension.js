@@ -225,6 +225,7 @@ function activate( context )
         console.log( "Running gerrit query: " + query );
         gerrit.query( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
         {
+            // results = [ results[ 0 ] ];
             console.log( "results:" + results.length );
             if( results.length > 0 )
             {
@@ -289,17 +290,21 @@ function activate( context )
     {
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filter', function()
         {
-            vscode.window.showInputBox( { prompt: "Filter tree" } ).then(
-                function( term )
-                {
-                    currentFilter = term;
-                    if( currentFilter )
+            var keys = Array.from( provider.getKeys() );
+            vscode.window.showQuickPick( keys, { matchOnDetail: true, matchOnDescription: true, canPickMany: false, placeHolder: "Select key to filter on" } ).then( function( key )
+            {
+                vscode.window.showInputBox( { prompt: "Enter value to filer '" + key + "' on:" } ).then(
+                    function( term )
                     {
-                        context.workspaceState.update( 'filtered', true );
-                        provider.filter( currentFilter );
-                        refresh();
-                    }
-                } );
+                        currentFilter = term;
+                        if( currentFilter )
+                        {
+                            context.workspaceState.update( 'filtered', true );
+                            provider.filter( { key: key, text: currentFilter } );
+                            refresh();
+                        }
+                    } );
+            } );
         } ) );
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>

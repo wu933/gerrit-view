@@ -11,6 +11,8 @@ var storageLocation;
 var nodes = [];
 var expandedNodes = {};
 var hashes = {};
+var keys = new Set();
+var visibleEntries = new Set();
 
 var showChanged = false;
 
@@ -35,7 +37,8 @@ function hash( text )
 
 var isVisible = function( e )
 {
-    var result = e.visible === true && ( showChanged === false || e.changed === true );
+    // var result = e.visible === true && ( showChanged === false || e.changed === true );
+    var result = ( visibleEntries.size === 0 || visibleEntries.has( e.entry ) ) && ( showChanged === false || e.changed === true );
     return result;
 };
 
@@ -113,7 +116,7 @@ class TreeNodeProvider
 
     getTreeItem( node )
     {
-        var treeItem = new vscode.TreeItem( node.label ? node.label : node.value );
+        var treeItem = new vscode.TreeItem( node.label ); //? node.label : node.value );
 
         treeItem.id = node.id;
 
@@ -188,39 +191,52 @@ class TreeNodeProvider
 
         if( children === undefined )
         {
+            visibleEntries.clear();
             children = nodes;
         }
         children.forEach( child =>
         {
-            if( child.nodes !== undefined )
+            if( child.nodes.length > 0 )
             {
-                this.filter( text, child.nodes );
-                var visibleNodes = child.nodes ? child.nodes.filter( isVisible ).length : 0;
-                child.visible = visibleNodes > 0;
+                this.filter( term, child.nodes );
             }
-            else
+
+            // var visibleNodes = child.nodes ? child.nodes.filter( isVisible ).length : 0;
+            var match = matcher.test( child.value );
+            // console.log( child.type.toLowerCase() + "=" + term.key.toLowerCase() + " ? " + match );
+            if( child.type.toLowerCase() === term.key.toLowerCase() )
             {
-                var match = matcher.test( child.label );
-                // child.visible = !text || match;
-                child.visible = child.type.toLowerCase() === term.key.toLowerCase() && match;
+                // console.log( child.type + " text:" + term.text + " == v:" + child.value );
+                if( match )
+                {
+
+                    console.log( "  " + child.entry );
+                    visibleEntries.add( child.entry );
+                    // console.log( "VE:" + JSON.stringify( visibleEntries ) );
+                }
             }
+            // child.visible = visibleNodes > 0 || ( child.type.toLowerCase() === term.key.toLowerCase() && match );
         } );
+
+        console.log( "---" );
+        console.log( JSON.stringify( Array.from( visibleEntries ) ) );
     }
 
     clearFilter( children )
     {
-        if( children === undefined )
-        {
-            children = nodes;
-        }
-        children.forEach( function( child )
-        {
-            child.visible = true;
-            if( child.nodes !== undefined )
-            {
-                this.clearFilter( child.nodes );
-            }
-        }, this );
+        visibleEntries.clear();
+        // if( children === undefined )
+        // {
+        //     children = nodes;
+        // }
+        // children.forEach( function( child )
+        // {
+        //     child.visible = true;
+        //     if( child.nodes !== undefined )
+        //     {
+        //         this.clearFilter( child.nodes );
+        //     }
+        // }, this );
     }
 
     populate( data, icons, formatters, keyField )
@@ -269,6 +285,8 @@ class TreeNodeProvider
                 var children = this._structure[ level ].children;
                 children.map( function( child )
                 {
+                    keys.add( child.property );
+
                     var values = objectUtils.getProperties( entry, child.property );
 
                     values.map( function( v )
@@ -295,11 +313,13 @@ class TreeNodeProvider
                         if( node === undefined )
                         {
                             node = {
+                                entry: key,
                                 level: level,
                                 value: v.value,
+                                label: v.value,
                                 type: child.property,
                                 id: child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ),
-                                visible: true,
+                                // visible: true,
                                 nodes: [],
                                 changed: true
                             };
@@ -314,7 +334,7 @@ class TreeNodeProvider
                             if( child.hasContextMenu )
                             {
                                 node.hasContextMenu = true;
-                                node.entry = entry;
+                                // node.entry = entry;
                             }
 
                             if( child.showChanged )
@@ -458,6 +478,11 @@ class TreeNodeProvider
     {
         showChanged = true;
         this.refresh();
+    }
+
+    getKeys()
+    {
+        return keys;
     }
 }
 
