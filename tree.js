@@ -182,9 +182,9 @@ class TreeNodeProvider
         this._onDidChangeTreeData.fire();
     }
 
-    filter( text, children )
+    filter( term, children )
     {
-        var matcher = new RegExp( text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
+        var matcher = new RegExp( term.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
 
         if( children === undefined )
         {
@@ -192,8 +192,6 @@ class TreeNodeProvider
         }
         children.forEach( child =>
         {
-            var match = matcher.test( child.label );
-
             if( child.nodes !== undefined )
             {
                 this.filter( text, child.nodes );
@@ -202,7 +200,9 @@ class TreeNodeProvider
             }
             else
             {
-                child.visible = !text || match;
+                var match = matcher.test( child.label );
+                // child.visible = !text || match;
+                child.visible = child.type.toLowerCase() === term.key.toLowerCase() && match;
             }
         } );
     }
