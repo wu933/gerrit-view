@@ -58,6 +58,11 @@ function forEach( callback, children )
     } );
 }
 
+function sortNodes( a, b )
+{
+    return a.label < b.label ? 1 : b.label < a.label ? -1 : a > b ? 1 : -1;
+}
+
 class TreeNodeProvider
 {
     constructor( _context, _structure )
@@ -394,11 +399,13 @@ class TreeNodeProvider
                             if( level === 0 )
                             {
                                 nodes.push( node );
+                                nodes.sort( sortNodes );
                             }
                             else
                             {
                                 node.parent = parent;
                                 parent.nodes.push( node );
+                                parent.nodes.sort( sortNodes );
                             }
                         }
                         else
