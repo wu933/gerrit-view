@@ -38,6 +38,7 @@ function hash( text )
 var isVisible = function( e )
 {
     // var result = e.visible === true && ( showChanged === false || e.changed === true );
+    console.log( e.label + " e:" + e.entry );
     var result = ( visibleEntries.size === 0 || visibleEntries.has( e.entry ) ) && ( showChanged === false || e.changed === true );
     return result;
 };
@@ -219,9 +220,9 @@ class TreeNodeProvider
                 if( match )
                 {
 
-                    // console.log( "  " + child.entry );
+                    console.log( "  " + child.entry );
                     visibleEntries.add( child.entry );
-                    // console.log( "VE:" + JSON.stringify( visibleEntries ) );
+                    console.log( "VE:" + JSON.stringify( visibleEntries ) );
                 }
             }
             // child.visible = visibleNodes > 0 || ( child.type.toLowerCase() === term.key.toLowerCase() && match );
@@ -382,7 +383,7 @@ class TreeNodeProvider
                                     if( !fs.existsSync( octiconIconPath ) )
                                     {
                                         var octiconIconDefinition = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
-                                            octicons[ child.icon ].toSVG( { "xmlns": "http://www.w3.org/2000/svg", "fill": "#C5C5C5", "viewBox": "0 -1 10 18" } );
+                                            octicons[ child.icon ].toSVG( { "xmlns": "http://www.w3.org/2000/svg", "fill": "#C5C5C5" } );
 
                                         fs.writeFileSync( octiconIconPath, octiconIconDefinition );
                                     }
@@ -479,15 +480,21 @@ class TreeNodeProvider
         this._context.workspaceState.update( 'expandedNodes', expandedNodes );
     }
 
+    showChanged()
+    {
+        showChanged = true;
+        this.refresh();
+    }
+
     showAll()
     {
         showChanged = false;
         this.refresh();
     }
 
-    showChanged()
+    clearAll()
     {
-        showChanged = true;
+        forEach( function( node ) { node.changed = false; }, nodes );
         this.refresh();
     }
 

@@ -293,6 +293,12 @@ function activate( context )
         setContext();
     }
 
+    function clearAll()
+    {
+        provider.clearAll();
+        setContext();
+    }
+
     function register()
     {
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filter', function()
@@ -330,6 +336,7 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showChanged', showChanged ) );
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showAll', showAll ) );
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.clearAll', clearAll ) );
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.setQuery', function()
         {
