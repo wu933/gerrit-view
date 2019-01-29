@@ -8,13 +8,10 @@ var objectUtils = require( './objectUtils.js' );
 
 var storageLocation;
 
-// var hiddenEntries = [];
-// var visibleEntries = [];
 var nodes = [];
 var expandedNodes = {};
 var hashes = {};
 var keys = new Set();
-var filters = {};
 
 var showChanged = false;
 
@@ -37,31 +34,9 @@ function hash( text )
     return hash;
 }
 
-var setVisible = function( entry, filters )
-{
-    var visible = true;
-    filters.map( function( filter )
-    {
-        var value = objectUtils.getUniqueProperty( entry, filter.term );
-        if( value !== undefined )
-        {
-            var matcher = new RegExp( filter.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
-            visible = visible && matcher.test( e.label );
-        }
-    } );
-    return visible;
-};
-
 var isVisible = function( e )
 {
-    var result = ( showChanged === false || e.changed === true );
-    // var filter = filters[ e.type.replace( /\./g, '_' ) ];
-    // if( result && filter !== undefined )
-    // {
-    //     var matcher = new RegExp( filter, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
-    //     result = matcher.test( e.label );
-    // }
-    // console.log( filter + " res:" + result );
+    var result = e.visible && ( showChanged === false || e.changed === true );
     return result;
 };
 
@@ -128,7 +103,6 @@ class TreeNodeProvider
                 return visibleNodes;
             }
             return [ { label: "Nothing found", empty: availableNodes.length === 0 } ];
-            // return [ { label: "Nothing found", empty: entries.length === 0 } ];
         }
         else if( node.nodes && node.nodes.length > 0 )
         {
@@ -210,14 +184,42 @@ class TreeNodeProvider
         this._onDidChangeTreeData.fire();
     }
 
-    filter( term )
+    filter( term, children )
     {
-        filters.push( term );
+        var matcher = new RegExp( term.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
+
+        if( children === undefined )
+        {
+            forEach( function( e ) { e.visible = false; }, nodes );
+            children = nodes;
+        }
+        children.forEach( child =>
+        {
+            if( child.nodes.length > 0 )
+            {
+                this.filter( term, child.nodes );
+            }
+
+            if( child.type.toLowerCase() === term.key.toLowerCase() )
+            {
+                if( matcher.test( child.value ) )
+                {
+                    child.visible = true;
+                    forEach( function( e ) { e.visible = true; }, child.nodes );
+                    var parent = child.parent;
+                    while( parent )
+                    {
+                        parent.visible = true;
+                        parent = parent.parent;
+                    }
+                }
+            }
+        } );
     }
 
     clearFilter()
     {
-        filters = [];
+        forEach( function( e ) { e.visible = true; }, nodes );
     }
 
     populate( data, icons, formatters, keyField )
@@ -299,7 +301,7 @@ class TreeNodeProvider
                                 label: v.value,
                                 type: child.property,
                                 id: child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ),
-                                // visible: true,
+                                visible: true,
                                 nodes: [],
                                 changed: ( firstRun === false )
                             };
