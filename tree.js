@@ -120,7 +120,7 @@ class TreeNodeProvider
 
         treeItem.id = node.id;
 
-        console.log( "creating tree item " + node.id );
+        // console.log( "creating tree item " + node.id );
 
         if( node.showChanged === true && node.changed !== true )
         {
@@ -182,6 +182,10 @@ class TreeNodeProvider
     refresh()
     {
         console.log( "provider.refresh" );
+        if( visibleEntries )
+        {
+            console.log( JSON.stringify( Array.from( visibleEntries ) ) );
+        }
         this._onDidChangeTreeData.fire();
     }
 
@@ -210,7 +214,7 @@ class TreeNodeProvider
                 if( match )
                 {
 
-                    console.log( "  " + child.entry );
+                    // console.log( "  " + child.entry );
                     visibleEntries.add( child.entry );
                     // console.log( "VE:" + JSON.stringify( visibleEntries ) );
                 }
@@ -218,8 +222,8 @@ class TreeNodeProvider
             // child.visible = visibleNodes > 0 || ( child.type.toLowerCase() === term.key.toLowerCase() && match );
         } );
 
-        console.log( "---" );
-        console.log( JSON.stringify( Array.from( visibleEntries ) ) );
+        // console.log( "---" );
+        // console.log( JSON.stringify( Array.from( visibleEntries ) ) );
     }
 
     clearFilter( children )
@@ -243,7 +247,7 @@ class TreeNodeProvider
     {
         var locateNode = function( node )
         {
-            console.log( " " + node.type + "=" + this.type + " ? " + ( node.type === this.type ) + " " + node.value + "=" + this.value + " ? " + ( node.value === this.value ) );
+            // console.log( " " + node.type + "=" + this.type + " ? " + ( node.type === this.type ) + " " + node.value + "=" + this.value + " ? " + ( node.value === this.value ) );
             return node.type === this.type && node.value === this.value;
         };
 
@@ -324,7 +328,7 @@ class TreeNodeProvider
                                 changed: true
                             };
 
-                            console.log( "new node:" + node.id + "(type:" + child.property + ")" );
+                            // console.log( "new node:" + node.id + "(type:" + child.property + ")" );
 
                             if( child.tooltip )
                             {
