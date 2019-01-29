@@ -8,11 +8,13 @@ var objectUtils = require( './objectUtils.js' );
 
 var storageLocation;
 
+// var hiddenEntries = [];
+// var visibleEntries = [];
 var nodes = [];
 var expandedNodes = {};
 var hashes = {};
 var keys = new Set();
-var visibleEntries = new Set();
+var filters = {};
 
 var showChanged = false;
 
@@ -35,11 +37,31 @@ function hash( text )
     return hash;
 }
 
+var setVisible = function( entry, filters )
+{
+    var visible = true;
+    filters.map( function( filter )
+    {
+        var value = objectUtils.getUniqueProperty( entry, filter.term );
+        if( value !== undefined )
+        {
+            var matcher = new RegExp( filter.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
+            visible = visible && matcher.test( e.label );
+        }
+    } );
+    return visible;
+};
+
 var isVisible = function( e )
 {
-    // var result = e.visible === true && ( showChanged === false || e.changed === true );
-    console.log( e.label + " e:" + e.entry );
-    var result = ( visibleEntries.size === 0 || visibleEntries.has( e.entry ) ) && ( showChanged === false || e.changed === true );
+    var result = ( showChanged === false || e.changed === true );
+    // var filter = filters[ e.type.replace( /\./g, '_' ) ];
+    // if( result && filter !== undefined )
+    // {
+    //     var matcher = new RegExp( filter, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
+    //     result = matcher.test( e.label );
+    // }
+    // console.log( filter + " res:" + result );
     return result;
 };
 
@@ -105,8 +127,8 @@ class TreeNodeProvider
             {
                 return visibleNodes;
             }
-
             return [ { label: "Nothing found", empty: availableNodes.length === 0 } ];
+            // return [ { label: "Nothing found", empty: entries.length === 0 } ];
         }
         else if( node.nodes && node.nodes.length > 0 )
         {
@@ -122,11 +144,9 @@ class TreeNodeProvider
 
     getTreeItem( node )
     {
-        var treeItem = new vscode.TreeItem( node.label ); //? node.label : node.value );
+        var treeItem = new vscode.TreeItem( node.label );
 
         treeItem.id = node.id;
-
-        // console.log( "creating tree item " + node.id );
 
         if( node.showChanged === true && node.changed !== true )
         {
@@ -187,73 +207,23 @@ class TreeNodeProvider
 
     refresh()
     {
-        console.log( "provider.refresh" );
-        if( visibleEntries )
-        {
-            console.log( JSON.stringify( Array.from( visibleEntries ) ) );
-        }
         this._onDidChangeTreeData.fire();
     }
 
-    filter( term, children )
+    filter( term )
     {
-        var matcher = new RegExp( term.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
-
-        if( children === undefined )
-        {
-            visibleEntries.clear();
-            children = nodes;
-        }
-        children.forEach( child =>
-        {
-            if( child.nodes.length > 0 )
-            {
-                this.filter( term, child.nodes );
-            }
-
-            // var visibleNodes = child.nodes ? child.nodes.filter( isVisible ).length : 0;
-            var match = matcher.test( child.value );
-            // console.log( child.type.toLowerCase() + "=" + term.key.toLowerCase() + " ? " + match );
-            if( child.type.toLowerCase() === term.key.toLowerCase() )
-            {
-                // console.log( child.type + " text:" + term.text + " == v:" + child.value );
-                if( match )
-                {
-
-                    console.log( "  " + child.entry );
-                    visibleEntries.add( child.entry );
-                    console.log( "VE:" + JSON.stringify( visibleEntries ) );
-                }
-            }
-            // child.visible = visibleNodes > 0 || ( child.type.toLowerCase() === term.key.toLowerCase() && match );
-        } );
-
-        // console.log( "---" );
-        // console.log( JSON.stringify( Array.from( visibleEntries ) ) );
+        filters.push( term );
     }
 
-    clearFilter( children )
+    clearFilter()
     {
-        visibleEntries.clear();
-        // if( children === undefined )
-        // {
-        //     children = nodes;
-        // }
-        // children.forEach( function( child )
-        // {
-        //     child.visible = true;
-        //     if( child.nodes !== undefined )
-        //     {
-        //         this.clearFilter( child.nodes );
-        //     }
-        // }, this );
+        filters = [];
     }
 
     populate( data, icons, formatters, keyField )
     {
         var locateNode = function( node )
         {
-            // console.log( " " + node.type + "=" + this.type + " ? " + ( node.type === this.type ) + " " + node.value + "=" + this.value + " ? " + ( node.value === this.value ) );
             return node.type === this.type && node.value === this.value;
         };
 
@@ -331,70 +301,18 @@ class TreeNodeProvider
                                 id: child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ),
                                 // visible: true,
                                 nodes: [],
-                                changed: true
+                                changed: ( firstRun === false )
                             };
-
-                            // console.log( "new node:" + node.id + "(type:" + child.property + ")" );
-
-                            if( child.tooltip )
-                            {
-                                node.tooltip = objectUtils.getUniqueProperty( entry, child.tooltip );
-                            }
 
                             if( child.hasContextMenu )
                             {
                                 node.hasContextMenu = true;
-                                // node.entry = entry;
                             }
 
                             if( child.showChanged )
                             {
                                 node.key = key;
                                 node.showChanged = true;
-                                node.changed = ( firstRun === false );
-                            }
-
-                            if( child.formatter !== undefined )
-                            {
-                                if( formatters[ child.formatter ] !== undefined )
-                                {
-                                    node.label = formatters[ child.formatter ]( entry, v );
-                                }
-                            }
-
-                            if( child.format !== undefined )
-                            {
-                                var label = child.format;
-                                var regex = new RegExp( "\\$\\{(.*?)\\}", "g" );
-                                label = label.replace( regex, function( match, name )
-                                {
-                                    return objectUtils.getUniqueProperty( entry, name, v.indexes );
-                                } );
-                                node.label = label;
-                            }
-
-                            if( child.icon )
-                            {
-                                if( octicons[ child.icon ] )
-                                {
-                                    var colour = new vscode.ThemeColor( "foreground" );
-                                    var octiconIconPath = path.join( storageLocation, child.icon + ".svg" );
-
-                                    if( !fs.existsSync( octiconIconPath ) )
-                                    {
-                                        var octiconIconDefinition = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
-                                            octicons[ child.icon ].toSVG( { "xmlns": "http://www.w3.org/2000/svg", "fill": "#C5C5C5" } );
-
-                                        fs.writeFileSync( octiconIconPath, octiconIconDefinition );
-                                    }
-
-                                    node.octicon = octiconIconPath;
-                                }
-
-                                else if( icons[ child.icon ] !== undefined )
-                                {
-                                    node.icon = icons[ child.icon ]( entry, v );
-                                }
                             }
 
                             if( level === 0 )
@@ -411,12 +329,66 @@ class TreeNodeProvider
                         }
                         else
                         {
-                            if( hasChanged )
+                            if( hasChanged && firstRun === false )
                             {
                                 node.changed = true;
                             }
                             node.delete = false;
                         }
+
+                        if( child.formatter !== undefined )
+                        {
+                            if( formatters[ child.formatter ] !== undefined )
+                            {
+                                node.label = formatters[ child.formatter ]( entry, v );
+                            }
+                        }
+
+                        if( child.format !== undefined )
+                        {
+                            var label = child.format;
+                            var regex = new RegExp( "\\$\\{(.*?)\\}", "g" );
+                            label = label.replace( regex, function( match, name )
+                            {
+                                return objectUtils.getUniqueProperty( entry, name, v.indexes );
+                            } );
+                            node.label = label;
+                        }
+
+                        if( child.icon )
+                        {
+                            if( octicons[ child.icon ] )
+                            {
+                                var colour = new vscode.ThemeColor( "foreground" );
+                                var octiconIconPath = path.join( storageLocation, child.icon + ".svg" );
+
+                                if( !fs.existsSync( octiconIconPath ) )
+                                {
+                                    var octiconIconDefinition = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
+                                        octicons[ child.icon ].toSVG( { "xmlns": "http://www.w3.org/2000/svg", "fill": "#C5C5C5" } );
+
+                                    fs.writeFileSync( octiconIconPath, octiconIconDefinition );
+                                }
+
+                                node.octicon = octiconIconPath;
+                            }
+
+                            else if( icons[ child.icon ] !== undefined )
+                            {
+                                node.icon = icons[ child.icon ]( entry, v );
+                                node.id += ( "[" + node.icon + "]" );
+                                if( entry == 4005 )
+                                {
+                                    console.log( node.id );
+                                }
+                            }
+                        }
+
+                        if( child.tooltip )
+                        {
+                            node.tooltip = objectUtils.getUniqueProperty( entry, child.tooltip );
+                        }
+
                     }, this );
                 }, this );
                 if( level > 0 && parent !== undefined )

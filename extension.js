@@ -245,10 +245,10 @@ function activate( context )
                 }
 
                 // console.log( "refreshRequired:" + refreshRequired );
-                // if( refreshRequired !== false )
-                // {
-                refresh();
-                // }
+                if( refreshRequired !== false )
+                {
+                    refresh();
+                }
             }
             else
             {
