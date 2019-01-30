@@ -131,9 +131,10 @@ class TreeNodeProvider
         if( node.nodes && node.nodes.length > 0 )
         {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-            if( expandedNodes[ node.id ] !== undefined )
+            var nodeId = node.id.replace( /\./g, '_' );
+            if( expandedNodes[ nodeId ] !== undefined )
             {
-                treeItem.collapsibleState = ( expandedNodes[ node.id ] === true ) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
+                treeItem.collapsibleState = ( expandedNodes[ nodeId ] === true ) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
             }
         }
 
@@ -186,35 +187,38 @@ class TreeNodeProvider
 
     filter( term, children )
     {
-        var matcher = new RegExp( term.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
+        if( term.key !== undefined )
+        {
+            var matcher = new RegExp( term.text, vscode.workspace.getConfiguration( 'gerrit-view' ).get( 'showFilterCaseSensitive' ) ? "" : "i" );
 
-        if( children === undefined )
-        {
-            forEach( function( e ) { e.visible = false; }, nodes );
-            children = nodes;
-        }
-        children.forEach( child =>
-        {
-            if( child.nodes.length > 0 )
+            if( children === undefined )
             {
-                this.filter( term, child.nodes );
+                forEach( function( e ) { e.visible = false; }, nodes );
+                children = nodes;
             }
-
-            if( child.type.toLowerCase() === term.key.toLowerCase() )
+            children.forEach( child =>
             {
-                if( matcher.test( child.value ) )
+                if( child.nodes.length > 0 )
                 {
-                    child.visible = true;
-                    forEach( function( e ) { e.visible = true; }, child.nodes );
-                    var parent = child.parent;
-                    while( parent )
+                    this.filter( term, child.nodes );
+                }
+
+                if( child.type.toLowerCase() === term.key.toLowerCase() )
+                {
+                    if( matcher.test( child.value ) )
                     {
-                        parent.visible = true;
-                        parent = parent.parent;
+                        child.visible = true;
+                        forEach( function( e ) { e.visible = true; }, child.nodes );
+                        var parent = child.parent;
+                        while( parent )
+                        {
+                            parent.visible = true;
+                            parent = parent.parent;
+                        }
                     }
                 }
-            }
-        } );
+            } );
+        }
     }
 
     clearFilter()
@@ -378,11 +382,6 @@ class TreeNodeProvider
                             else if( icons[ child.icon ] !== undefined )
                             {
                                 node.icon = icons[ child.icon ]( entry, v );
-                                node.id += ( "[" + node.icon + "]" );
-                                if( entry == 4005 )
-                                {
-                                    console.log( node.id );
-                                }
                             }
                         }
 
@@ -444,7 +443,8 @@ class TreeNodeProvider
 
     setExpanded( id, expanded )
     {
-        expandedNodes[ id ] = expanded;
+        var nodeId = id.replace( /\./g, '_' );
+        expandedNodes[ nodeId ] = expanded;
         this._context.workspaceState.update( 'expandedNodes', expandedNodes );
     }
 
@@ -470,6 +470,19 @@ class TreeNodeProvider
     {
         forEach( function( node ) { node.changed = false; }, nodes );
         this.refresh();
+    }
+
+    hasChanged()
+    {
+        var hasChanged = false;
+        forEach( function( node )
+        {
+            if( node.showChanged && node.changed && node.visible )
+            {
+                hasChanged = true;
+            }
+        }, nodes );
+        return hasChanged;
     }
 
     getKeys()

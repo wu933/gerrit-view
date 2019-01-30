@@ -229,22 +229,19 @@ function activate( context )
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
         var query = "ssh -p " + config.get( "port" ) + " " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
 
-        // console.log( "Running gerrit query: " + query );
         gerrit.query( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
         {
-            // results = [ results[ 0 ] ];
-            // console.log( "results:" + results.length );
             if( results.length > 0 )
             {
                 var changed = provider.populate( results, icons, formatters, "number" );
 
-                // console.log( "changed:" + changed.length );
+                provider.filter( context.workspaceState.get( 'filter', {} ) );
+
                 if( changed.length > 0 )
                 {
                     vscode.window.showInformationMessage( "gerrit-view: Updated change sets: " + changed.join( "," ) );
                 }
 
-                // console.log( "refreshRequired:" + refreshRequired );
                 if( refreshRequired !== false )
                 {
                     refresh();
@@ -313,6 +310,7 @@ function activate( context )
                         if( currentFilter )
                         {
                             context.workspaceState.update( 'filtered', true );
+                            context.workspaceState.update( 'filter', { key: key, text: currentFilter } );
                             provider.filter( { key: key, text: currentFilter } );
                             refresh();
                         }
