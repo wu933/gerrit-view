@@ -100,6 +100,7 @@ function activate( context )
     {
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-filtered', context.workspaceState.get( 'filtered', false ) );
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-show-changed', context.workspaceState.get( 'showChanged', false ) );
+        vscode.commands.executeCommand( 'setContext', 'gerrit-view-has-changed', provider.hasChanged() );
     }
 
     function refresh()

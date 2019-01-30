@@ -37,7 +37,7 @@
             "view/title": [
                 {
                     "command": "gerrit-view.clearAll",
-                    "when": "view =~ /gerrit-view/ && gerrit-view-show-changed == true",
+                    "when": "view =~ /gerrit-view/ && gerrit-view-has-changed == true",
                     "group": "navigation@1"
                 },
                 {
