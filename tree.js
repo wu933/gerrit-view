@@ -10,6 +10,7 @@ var storageLocation;
 
 var nodes = [];
 var expandedNodes = {};
+var changedNodes = {};
 var hashes = {};
 var keys = new Set();
 
@@ -61,6 +62,11 @@ function sortNodes( a, b )
     return a.label < b.label ? 1 : b.label < a.label ? -1 : a > b ? 1 : -1;
 }
 
+function sanitizePath( path )
+{
+    return path.replace( /\./g, '_' );
+}
+
 class TreeNodeProvider
 {
     constructor( _context, _structure )
@@ -71,7 +77,9 @@ class TreeNodeProvider
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
+        showChanged = _context.workspaceState.get( 'showChanged', false );
         expandedNodes = _context.workspaceState.get( 'expandedNodes', {} );
+        changedNodes = _context.workspaceState.get( 'changedNodes', {} );
 
         if( _context.storagePath && !fs.existsSync( _context.storagePath ) )
         {
@@ -85,8 +93,6 @@ class TreeNodeProvider
         {
             storageLocation = _context.extensionPath;
         }
-
-        showChanged = _context.workspaceState.get( 'showChanged', false );
     }
 
     getChildren( node )
@@ -131,10 +137,9 @@ class TreeNodeProvider
         if( node.nodes && node.nodes.length > 0 )
         {
             treeItem.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
-            var nodeId = node.id.replace( /\./g, '_' );
-            if( expandedNodes[ nodeId ] !== undefined )
+            if( expandedNodes[ node.id ] !== undefined )
             {
-                treeItem.collapsibleState = ( expandedNodes[ nodeId ] === true ) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
+                treeItem.collapsibleState = ( expandedNodes[ node.id ] === true ) ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
             }
         }
 
@@ -298,16 +303,18 @@ class TreeNodeProvider
 
                         if( node === undefined )
                         {
+                            var id = sanitizePath( child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ) );
+
                             node = {
                                 entry: key,
                                 level: level,
                                 value: v.value,
                                 label: v.value,
                                 type: child.property,
-                                id: child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ),
+                                id: id,
                                 visible: true,
                                 nodes: [],
-                                changed: ( firstRun === false )
+                                changed: ( changedNodes[ id ] === true )
                             };
 
                             if( child.hasContextMenu )
@@ -390,6 +397,12 @@ class TreeNodeProvider
                             node.tooltip = objectUtils.getUniqueProperty( entry, child.tooltip );
                         }
 
+                        if( node.changed )
+                        {
+                            changedNodes[ node.id ] = true;
+                            this._context.workspaceState.update( 'changedNodes', changedNodes );
+                        }
+
                     }, this );
                 }, this );
                 if( level > 0 && parent !== undefined )
@@ -466,9 +479,19 @@ class TreeNodeProvider
         this.refresh();
     }
 
+    clearChanged( node )
+    {
+        node.changed = false;
+        delete changedNodes[ node.id ];
+        this._context.workspaceState.update( 'changedNodes', changedNodes );
+        this.refresh();
+    }
+
     clearAll()
     {
         forEach( function( node ) { node.changed = false; }, nodes );
+        changed = new Set();
+        this._context.workspaceState.update( 'changed', changed );
         this.refresh();
     }
 

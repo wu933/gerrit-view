@@ -43,8 +43,7 @@ function activate( context )
                     icon: "overallScore",
                     showChanged: true,
                     format: "${number} ${subject}",
-                    hasContextMenu: true,
-                    tooltip: "currentPatchSet.approvals"
+                    hasContextMenu: true
                 }
             ]
         },
@@ -321,8 +320,7 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>
         {
-            node.changed = false;
-            provider.refresh();
+            provider.clearChanged( node );
         } ) );
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filterClear', clearFilter ) );
