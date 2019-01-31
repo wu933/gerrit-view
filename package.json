@@ -41,13 +41,13 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "gerrit-view.showChanged",
-                    "when": "view =~ /gerrit-view/ && gerrit-view-show-changed == false",
+                    "command": "gerrit-view.showChangedOnly",
+                    "when": "view =~ /gerrit-view/ && gerrit-view-show-changed-only == false",
                     "group": "navigation@2"
                 },
                 {
                     "command": "gerrit-view.showAll",
-                    "when": "view =~ /gerrit-view/ && gerrit-view-show-changed == true",
+                    "when": "view =~ /gerrit-view/ && gerrit-view-show-changed-only == true",
                     "group": "navigation@2"
                 },
                 {
@@ -111,8 +111,8 @@
                 }
             },
             {
-                "command": "gerrit-view.showChanged",
-                "title": "Show Changed",
+                "command": "gerrit-view.showChangedOnly",
+                "title": "Show Changed Only",
                 "category": "Gerrit View",
                 "icon": {
                     "dark": "resources/icons/dark/empty-star.svg",

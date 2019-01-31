@@ -99,7 +99,7 @@ function activate( context )
     function setContext()
     {
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-filtered', context.workspaceState.get( 'filtered', false ) );
-        vscode.commands.executeCommand( 'setContext', 'gerrit-view-show-changed', context.workspaceState.get( 'showChanged', false ) );
+        vscode.commands.executeCommand( 'setContext', 'gerrit-view-show-changed-only', context.workspaceState.get( 'showChangedOnly', false ) );
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-has-changed', provider.hasChanged() );
     }
 
@@ -276,16 +276,16 @@ function activate( context )
         }
     }
 
-    function showChanged()
+    function showChangedOnly()
     {
-        context.workspaceState.update( 'showChanged', true );
-        provider.showChanged();
+        context.workspaceState.update( 'showChangedOnly', true );
+        provider.showChangedOnly();
         setContext();
     }
 
     function showAll()
     {
-        context.workspaceState.update( 'showChanged', false );
+        context.workspaceState.update( 'showChangedOnly', false );
         provider.showAll();
         setContext();
     }
@@ -320,6 +320,7 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>
         {
+            console.log( JSON.stringify( node.source, null, 2 ) );
             provider.clearChanged( node );
         } ) );
 
@@ -331,7 +332,7 @@ function activate( context )
             vscode.commands.executeCommand( 'vscode.open', vscode.Uri.parse( item.entry.url ) );
         } ) );
 
-        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showChanged', showChanged ) );
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showChangedOnly', showChangedOnly ) );
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.showAll', showAll ) );
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.clearAll', clearAll ) );
 

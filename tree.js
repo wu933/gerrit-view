@@ -14,7 +14,7 @@ var changedNodes = {};
 var hashes = {};
 var keys = new Set();
 
-var showChanged = false;
+var showChangedOnly = false;
 
 function hash( text )
 {
@@ -37,7 +37,7 @@ function hash( text )
 
 var isVisible = function( e )
 {
-    var result = e.visible && ( showChanged === false || e.changed === true );
+    var result = e.visible && ( showChangedOnly === false || e.changed === true );
     return result;
 };
 
@@ -77,7 +77,7 @@ class TreeNodeProvider
         this._onDidChangeTreeData = new vscode.EventEmitter();
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-        showChanged = _context.workspaceState.get( 'showChanged', false );
+        showChangedOnly = _context.workspaceState.get( 'showChangedOnly', false );
         expandedNodes = _context.workspaceState.get( 'expandedNodes', {} );
         changedNodes = _context.workspaceState.get( 'changedNodes', {} );
 
@@ -161,7 +161,7 @@ class TreeNodeProvider
             };
         }
 
-        if( node.hasContextMenu )
+        if( node.hasContextMenu === true )
         {
             treeItem.contextValue = "showMenu";
         }
@@ -314,20 +314,11 @@ class TreeNodeProvider
                                 type: child.property,
                                 id: id,
                                 visible: true,
+                                showChanged: child.showChanged,
+                                hasContextMenu: child.hasContextMenu,
                                 nodes: [],
                                 changed: ( changedNodes[ id ] === true )
                             };
-
-                            if( child.hasContextMenu )
-                            {
-                                node.hasContextMenu = true;
-                            }
-
-                            if( child.showChanged )
-                            {
-                                node.key = key;
-                                node.showChanged = true;
-                            }
 
                             if( level === 0 )
                             {
@@ -474,15 +465,15 @@ class TreeNodeProvider
         this._context.workspaceState.update( 'expandedNodes', expandedNodes );
     }
 
-    showChanged()
+    showChangedOnly()
     {
-        showChanged = true;
+        showChangedOnly = true;
         this.refresh();
     }
 
     showAll()
     {
-        showChanged = false;
+        showChangedOnly = false;
         this.refresh();
     }
 
