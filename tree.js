@@ -306,6 +306,7 @@ class TreeNodeProvider
                             var id = sanitizePath( child.property + ":" + ( parent ? ( parent.id + "." + v.value ) : v.value ) );
 
                             node = {
+                                source: entry,
                                 entry: key,
                                 level: level,
                                 value: v.value,
