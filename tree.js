@@ -168,7 +168,7 @@ class TreeNodeProvider
 
         if( node.tooltip )
         {
-            treeItem.tooltip = JSON.stringify( node.tooltip, null, 2 );
+            treeItem.tooltip = node.tooltip;
         }
 
         treeItem.command = {
@@ -394,7 +394,13 @@ class TreeNodeProvider
 
                         if( child.tooltip )
                         {
-                            node.tooltip = objectUtils.getUniqueProperty( entry, child.tooltip );
+                            var tooltip = child.tooltip;
+                            var regex = new RegExp( "\\$\\{(.*?)\\}", "g" );
+                            tooltip = tooltip.replace( regex, function( match, name )
+                            {
+                                return objectUtils.getUniqueProperty( entry, name, v.indexes );
+                            } );
+                            node.tooltip = tooltip;
                         }
 
                         if( node.changed )
@@ -490,8 +496,8 @@ class TreeNodeProvider
     clearAll()
     {
         forEach( function( node ) { node.changed = false; }, nodes );
-        changed = new Set();
-        this._context.workspaceState.update( 'changed', changed );
+        changedNodes = {};
+        this._context.workspaceState.update( 'changed', changedNodes );
         this.refresh();
     }
 

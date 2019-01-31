@@ -43,14 +43,15 @@ function activate( context )
                     icon: "overallScore",
                     showChanged: true,
                     format: "${number} ${subject}",
-                    hasContextMenu: true
+                    hasContextMenu: true,
+                    tooltip: "${commitMessage}"
                 }
             ]
         },
         {
             parent: "subject",
             children: [
-                { property: "currentPatchSet.approvals.by.name", icon: "score" },
+                { property: "currentPatchSet.approvals.by.name", icon: "score", tooltip: "${currentPatchSet.approvals.by.email}" },
                 { property: "id", format: "ID: ${id}" },
                 { property: "createdOn", formatter: "created" },
                 { property: "lastUpdated", formatter: "updated" },
@@ -104,7 +105,6 @@ function activate( context )
 
     function refresh()
     {
-        // console.log( "refresh" );
         provider.refresh();
         setContext();
     }
