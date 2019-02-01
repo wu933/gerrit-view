@@ -1,5 +1,8 @@
 var child_process = require( 'child_process' );
 var fs = require( 'fs' )
+var nodeSsh = require( 'node-ssh' );
+var os = require( 'os' );
+var path = require( 'path' );
 
 var currentProcess;
 
@@ -34,7 +37,7 @@ function formatResults( stdout, debug )
     return results;
 }
 
-module.exports.query = function query( command, options )
+module.exports.run = function run( query, options )
 {
     function debug( text )
     {
@@ -44,43 +47,69 @@ module.exports.query = function query( command, options )
         }
     }
 
-    var execString = command;
-
-    debug( execString );
+    var ssh = new nodeSsh();
 
     return new Promise( function( resolve, reject )
     {
-        // const maxBuffer = ( options.maxBuffer || 200 ) * 1024;
-        // var currentProcess = child_process.exec( execString, { maxBuffer } );
-
-        // var results = "";
-
-        // currentProcess.stdout.on( 'data', function( data )
-        // {
-        //     results += data;
-        // } );
-
-        // currentProcess.stderr.on( 'data', function( data )
-        // {
-        //     reject( new GerritError( data, "" ) );
-        // } );
-
-        // currentProcess.on( 'close', function( code )
-        // {
-        //     if( code === 0 )
-        //     {
-        //         resolve( formatResults( results, debug ) );
-        //     }
-        //     else
-        //     {
-        //         reject( new GerritError( "Too many results - try using the 'limit:<n>' option, or increasing 'gerrit-view.bufferSize'.", "" ) );
-        //     }
-        // } );
-        fs.readFile( '/Users/nige/Projects/vscode-extensions/gerrit-view/gerrit.json', 'utf8', function( err, data )
+        ssh.connect( {
+            host: query.server,
+            username: os.userInfo().username,
+            port: query.port,
+            privateKey: path.join( os.homedir(), ".ssh", "id_rsa" )
+        } ).then( function()
         {
-            resolve( formatResults( data, debug ) );
-        } );
+            ssh.execCommand( [ query.command, query.query, query.options, "--format JSON" ].join( " " ) ).then( function( result )
+            {
+                resolve( formatResults( result.stdout, debug ) );
+            } )
+        }, function( error )
+            {
+                reject( new GerritError( error, "" ) );
+            }
+        );
     } );
+
+    // var query = "ssh -p " + config.get( "port" ) + " " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
+
+
+    // var execString = command;
+
+    // debug( execString );
+
+    // return new Promise( function( resolve, reject )
+    // {
+
+    //     const maxBuffer = ( options.maxBuffer || 200 ) * 1024;
+    //     var currentProcess = child_process.exec( execString, { maxBuffer } );
+
+    //     var results = "";
+
+    //     currentProcess.stdout.on( 'data', function( data )
+    //     {
+    //         results += data;
+    //     } );
+
+    //     currentProcess.stderr.on( 'data', function( data )
+    //     {
+    //         reject( new GerritError( data, "" ) );
+    //     } );
+
+    //     currentProcess.on( 'close', function( code )
+    //     {
+    //         if( code === 0 )
+    //         {
+    //             resolve( formatResults( results, debug ) );
+    //         }
+    //         else
+    //         {
+    //             reject( new GerritError( "Too many results - try using the 'limit:<n>' option, or increasing 'gerrit-view.bufferSize'.", "" ) );
+    //         }
+    //     } );
+    //     fs.readFile( '/Users/nige/Projects/vscode-extensions/gerrit-view/gerrit.json', 'utf8', function( err, data )
+    //     {
+    //         resolve( formatResults( data, debug ) );
+    //     } );
+    // } );
 };
 
 module.exports.kill = function()

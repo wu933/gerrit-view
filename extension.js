@@ -223,13 +223,20 @@ function activate( context )
 
         if( vscode.window.state.focused !== true )
         {
-            return;
+            // return;
         }
 
         var config = vscode.workspace.getConfiguration( 'gerrit-view' );
-        var query = "ssh -p " + config.get( "port" ) + " " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
+        // var query = "ssh -p " + config.get( "port" ) + " " + config.get( "server" ) + " gerrit query " + config.get( "query" ) + " " + config.get( "options" ) + " --format JSON";
+        var query = {
+            port: config.get( "port" ),
+            server: config.get( "server" ),
+            command: "gerrit query",
+            query: config.get( "query" ),
+            options: config.get( "options" )
+        };
 
-        gerrit.query( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
+        gerrit.run( query, { outputChannel: outputChannel, maxBuffer: config.get( "queryBufferSize" ) } ).then( function( results )
         {
             if( results.length > 0 )
             {
