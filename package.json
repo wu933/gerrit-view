@@ -23,13 +23,15 @@
             "explorer": [
                 {
                     "id": "gerrit-view",
-                    "name": "Gerrit"
+                    "name": "Gerrit",
+                    "when": "gerrit-view-tree-built == true && gerrit-view-in-explorer == true"
                 }
             ],
             "scm": [
                 {
                     "id": "gerrit-view",
-                    "name": "Gerrit"
+                    "name": "Gerrit",
+                    "when": "gerrit-view-tree-built == true"
                 }
             ]
         },
@@ -203,7 +205,7 @@
                 },
                 "gerrit-view.autoRefresh": {
                     "type": "number",
-                    "default": 30,
+                    "default": 60,
                     "markdownDescription": "Automatically refresh the tree after this many seconds. Set to 0 to disable."
                 }
             }

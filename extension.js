@@ -8,6 +8,7 @@ var tree = require( "./tree.js" );
 var objectUtils = require( "./objectUtils.js" );
 
 var autoRefresh;
+var treeBuilt = false;
 
 function toString( date )
 {
@@ -103,6 +104,7 @@ function activate( context )
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-filtered', context.workspaceState.get( 'filtered', false ) );
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-show-changed-only', context.workspaceState.get( 'showChangedOnly', false ) );
         vscode.commands.executeCommand( 'setContext', 'gerrit-view-has-changed', provider.hasChanged() );
+        vscode.commands.executeCommand( 'setContext', 'gerrit-view-tree-built', treeBuilt );
     }
 
     function refresh()
@@ -242,6 +244,8 @@ function activate( context )
             {
                 var changed = provider.populate( results, icons, formatters, "number" );
 
+                debug( results.length + " entries found, " + changed.length + " changed" );
+
                 provider.filter( context.workspaceState.get( 'filter', {} ) );
 
                 if( changed.length > 0 )
@@ -249,7 +253,9 @@ function activate( context )
                     vscode.window.showInformationMessage( "gerrit-view: Updated change sets: " + changed.join( "," ) );
                 }
 
-                if( refreshRequired !== false )
+                treeBuilt = true;
+
+                // if( refreshRequired !== false )
                 {
                     refresh();
                 }
@@ -327,8 +333,7 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>
         {
-            console.log( JSON.stringify( node.source, null, 2 ) );
-            if( node.showChanged )
+            if( node.showChanged && node.changed )
             {
                 provider.clearChanged( node );
             }
@@ -339,6 +344,7 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.openInBrowser', function( item )
         {
+            console.log( item.entry.url );
             vscode.commands.executeCommand( 'vscode.open', vscode.Uri.parse( item.entry.url ) );
         } ) );
 

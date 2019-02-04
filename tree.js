@@ -128,7 +128,11 @@ class TreeNodeProvider
 
         treeItem.id = node.id;
 
-        if( node.showChanged === true && node.changed !== true )
+        if( node.showChanged === true && node.changed == true )
+        {
+            treeItem.label = treeItem.label;
+        }
+        else
         {
             treeItem.description = treeItem.label;
             treeItem.label = "";
