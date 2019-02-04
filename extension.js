@@ -244,7 +244,7 @@ function activate( context )
             {
                 var changed = provider.populate( results, icons, formatters, "number" );
 
-                debug( results.length + " entries found, " + changed.length + " changed" );
+                debug( results.length + " entries found, " + changed.length + " changed (" + changed.join( "," ) + ")" );
 
                 provider.filter( context.workspaceState.get( 'filter', {} ) );
 
@@ -255,10 +255,7 @@ function activate( context )
 
                 treeBuilt = true;
 
-                // if( refreshRequired !== false )
-                {
-                    refresh();
-                }
+                refresh();
             }
             else
             {

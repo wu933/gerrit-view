@@ -1,6 +1,14 @@
 # Gerrit View
 
-This extension provides a view of your Gerrit server, either in the explorer view and/or in the SCM view. When parts of the tree are updated they are displayed larger and brighter.
+This extension provides a view of your Gerrit server.
+
+When parts of the tree are updated they are displayed larger and brighter. By default, the view is automatically refreshed every minute.
+
+The extension assumes that Jenkins is being used for continuous integration.
+
+*Note: This was developed for use in my work place. If you find things don't work as expected, please raise an issue [here](https://github.com/Gruntfuggly/gerrit-view/issues) and I'll try to help.*
+
+TODO: Provide access to the tree structure configuration.
 
 ## Controls
 
@@ -31,13 +39,13 @@ The source code is available on GitHub [here](https://github.com/Gruntfuggly/ger
 
 ## Commands
 
-The default query is `status:open` which will return open changesets from all probjects and branches. To modify the query, use the `Gerrit View: Set Query` command.
+The default query is `status:open` which will return open change sets from all projects and branches. To modify the query, use the `Gerrit View: Set Query` command.
 
 ## Configuration
 
 | Setting                         | Default               | Description                                                                           |
 |---------------------------------|-----------------------|---------------------------------------------------------------------------------------|
-| gerrit-view.server              |                       | Your Gerrit server hostname.|                                                         |
+| gerrit-view.server              |                       | Your Gerrit server hostname.                                                          |
 | gerrit-view.port                | 29418                 | Port number for your Gerrit server.                                                   |
 | gerrit-view.pathToSshKey        | ".ssh/id_rsa"         | Path to your ssh key.                                                                 |
 | gerrit-view.queryBufferSize     | 200                   | Size of query buffer in kilobytes. Increase this if you expect lots of query results. |

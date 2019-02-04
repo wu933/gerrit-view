@@ -11,6 +11,7 @@ var storageLocation;
 var nodes = [];
 var expandedNodes = {};
 var changedNodes = {};
+var changedEntries = [];
 var hashes = {};
 var keys = new Set();
 
@@ -80,6 +81,7 @@ class TreeNodeProvider
         showChangedOnly = _context.workspaceState.get( 'showChangedOnly', false );
         expandedNodes = _context.workspaceState.get( 'expandedNodes', {} );
         changedNodes = _context.workspaceState.get( 'changedNodes', {} );
+        changedEntries = _context.workspaceState.get( 'changedEntries', [] );
 
         if( _context.storagePath && !fs.existsSync( _context.storagePath ) )
         {
@@ -242,10 +244,9 @@ class TreeNodeProvider
             return node.type === this.type && node.value === this.value;
         };
 
-        var changed = [];
-        var firstRun = Object.keys( hashes ).length === 0;
-
         forEach( function( node ) { node.delete = true; }, nodes );
+
+        var updatedEntries = [];
 
         data.map( function( item, index )
         {
@@ -263,13 +264,11 @@ class TreeNodeProvider
                 if( key !== undefined )
                 {
                     var newHash = hash( JSON.stringify( entry ) );
-                    if( hashes[ key ] != newHash )
+                    if( hashes[ key ] != newHash && changedEntries.indexOf( key ) === -1 )
                     {
-                        if( firstRun === false )
-                        {
-                            changed.push( key );
-                            hasChanged = true;
-                        }
+                        changedEntries.push( key );
+                        updatedEntries.push( key );
+                        hasChanged = true;
                     }
                     hashes[ key ] = newHash;
                 }
@@ -321,7 +320,7 @@ class TreeNodeProvider
                                 showChanged: child.showChanged,
                                 hasContextMenu: child.hasContextMenu,
                                 nodes: [],
-                                changed: ( changedNodes[ id ] === true )
+                                changed: ( changedNodes[ id ] === true || hasChanged )
                             };
 
                             if( level === 0 )
@@ -416,7 +415,9 @@ class TreeNodeProvider
 
         this.prune();
 
-        return changed;
+        this._context.workspaceState.update( 'changedEntries', changedEntries );
+
+        return updatedEntries;
     }
 
     prune( children )
@@ -493,7 +494,9 @@ class TreeNodeProvider
     {
         forEach( function( node ) { node.changed = false; }, nodes );
         changedNodes = {};
-        this._context.workspaceState.update( 'changed', changedNodes );
+        changedEntries = [];
+        this._context.workspaceState.update( 'changedNodes', changedNodes );
+        this._context.workspaceState.update( 'changedEntries', changedEntries );
         this.refresh();
     }
 
