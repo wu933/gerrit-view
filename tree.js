@@ -334,7 +334,7 @@ class TreeNodeProvider
                         }
                         else
                         {
-                            if( hasChanged && firstRun === false )
+                            if( hasChanged )
                             {
                                 node.changed = true;
                             }
@@ -395,7 +395,7 @@ class TreeNodeProvider
                             node.tooltip = tooltip;
                         }
 
-                        if( node.changed )
+                        if( hasChanged )
                         {
                             changedNodes[ node.id ] = true;
                             this._context.workspaceState.update( 'changedNodes', changedNodes );

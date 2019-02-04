@@ -51,10 +51,10 @@ function activate( context )
         {
             parent: "subject",
             children: [
-                { property: "currentPatchSet.approvals.by.name", icon: "score", tooltip: "${currentPatchSet.approvals.by.email}" },
+                { property: "currentPatchSet.approvals.by.name", icon: "score", tooltip: "${currentPatchSet.approvals.by.email}", showChanged: true },
                 { property: "id", format: "ID: ${id}" },
                 { property: "createdOn", formatter: "created" },
-                { property: "lastUpdated", formatter: "updated" },
+                { property: "lastUpdated", formatter: "updated", showChanged: true },
                 { property: "owner.name", format: "Owner: ${owner.name} (${owner.username})" }
             ],
         },
@@ -321,7 +321,10 @@ function activate( context )
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>
         {
             console.log( JSON.stringify( node.source, null, 2 ) );
-            provider.clearChanged( node );
+            if( node.showChanged )
+            {
+                provider.clearChanged( node );
+            }
         } ) );
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.filterClear', clearFilter ) );
