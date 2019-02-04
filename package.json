@@ -166,6 +166,11 @@
                     "default": 29418,
                     "markdownDescription": "Port number for your Gerrit server"
                 },
+                "gerrit-view.pathToSshKey": {
+                    "type": "string",
+                    "default": ".ssh/id_rsa",
+                    "markdownDescription": "Path to your ssh key"
+                },
                 "gerrit-view.queryBufferSize": {
                     "type": "number",
                     "default": 200,
@@ -206,6 +211,7 @@
     },
     "dependencies": {
         "micromatch": "^3.1.10",
+        "node-ssh": "^5.1.2",
         "octicons": "^7.4.0"
     }
 }
