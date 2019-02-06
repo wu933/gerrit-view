@@ -72,6 +72,10 @@
                 {
                     "command": "gerrit-view.openInBrowser",
                     "when": "view =~ /gerrit-view/ && viewItem == showMenu"
+                },
+                {
+                    "command": "gerrit-view.markAsChanged",
+                    "when": "view =~ /gerrit-view/ && viewItem == showMenu"
                 }
             ]
         },
@@ -146,7 +150,12 @@
             },
             {
                 "command": "gerrit-view.openInBrowser",
-                "title": "Open the change set in a browser window",
+                "title": "Open change set in browser",
+                "category": "Gerrit View"
+            },
+            {
+                "command": "gerrit-view.markAsChanged",
+                "title": "Mark as Changed",
                 "category": "Gerrit View"
             },
             {

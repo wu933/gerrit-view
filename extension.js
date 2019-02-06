@@ -330,9 +330,18 @@ function activate( context )
 
         context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.select', ( node ) =>
         {
-            if( node.showChanged && node.changed )
+            provider.setSelected( node );
+            if( node.showChanged )
             {
-                provider.clearChanged( node );
+                provider.setChanged( node, false );
+            }
+        } ) );
+
+        context.subscriptions.push( vscode.commands.registerCommand( 'gerrit-view.markAsChanged', ( node ) =>
+        {
+            if( node.showChanged )
+            {
+                provider.setChanged( node, true );
             }
         } ) );
 

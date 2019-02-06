@@ -14,7 +14,7 @@ var changedNodes = {};
 var changedEntries = [];
 var hashes = {};
 var keys = new Set();
-
+var selectedNode;
 var showChangedOnly = false;
 
 function hash( text )
@@ -39,6 +39,10 @@ function hash( text )
 var isVisible = function( e )
 {
     var result = e.visible && ( showChangedOnly === false || e.changed === true );
+    if( selectedNode === e.id )
+    {
+        result = true;
+    }
     return result;
 };
 
@@ -482,10 +486,24 @@ class TreeNodeProvider
         this.refresh();
     }
 
-    clearChanged( node )
+    setChanged( node, changed )
     {
-        node.changed = false;
-        delete changedNodes[ node.id ];
+        node.changed = changed;
+        if( changed )
+        {
+            changedNodes[ node.id ] = true;
+            forEach( function( e ) { e.changed = true; }, node.nodes );
+            var parent = node.parent;
+            while( parent )
+            {
+                parent.changed = true;
+                parent = parent.parent;
+            }
+        }
+        else
+        {
+            delete changedNodes[ node.id ];
+        }
         this._context.workspaceState.update( 'changedNodes', changedNodes );
         this.refresh();
     }
@@ -516,6 +534,11 @@ class TreeNodeProvider
     getKeys()
     {
         return keys;
+    }
+
+    setSelected( node )
+    {
+        selectedNode = node.id;
     }
 }
 
