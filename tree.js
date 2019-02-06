@@ -35,17 +35,44 @@ function hash( text )
     return hash;
 }
 
-var isVisible = function( e )
+var hasChangedParent = function( node )
 {
-    var result = e.visible && ( showChangedOnly === false || e.changed === true );
-    if( selectedNode === e.id )
+    var parent = node.parent;
+    while( parent )
+    {
+        if( parent.showChanged && parent.changed === true )
+        {
+            return true;
+        }
+        parent = parent.parent;
+    }
+    return false;
+}
+
+var hasChangedChildren = function( node )
+{
+    var result = ( node.showChanged === true && node.changed === true );
+    if( node.nodes.length > 0 && result === false )
+    {
+        node.nodes.map( function( child )
+        {
+            result = result || hasChangedChildren( child );
+        } );
+    }
+    return result;
+}
+
+var isVisible = function( node )
+{
+    var result = node.visible && ( showChangedOnly === false || node.changed === true || hasChangedParent( node ) || hasChangedChildren( node ) );
+    if( selectedNode === node.id )
     {
         result = true;
     }
     return result;
 };
 
-function forEach( callback, children )
+function forEachNode( callback, children )
 {
     if( children === undefined )
     {
@@ -55,7 +82,7 @@ function forEach( callback, children )
     {
         if( child.nodes !== undefined )
         {
-            forEach( callback, child.nodes );
+            forEachNode( callback, child.nodes );
         }
         callback( child );
     } );
@@ -207,7 +234,7 @@ class TreeNodeProvider
 
             if( children === undefined )
             {
-                forEach( function( e ) { e.visible = false; }, nodes );
+                forEachNode( function( node ) { node.visible = false; }, nodes );
                 children = nodes;
             }
             children.forEach( child =>
@@ -222,7 +249,7 @@ class TreeNodeProvider
                     if( matcher.test( child.value ) )
                     {
                         child.visible = true;
-                        forEach( function( e ) { e.visible = true; }, child.nodes );
+                        forEachNode( function( node ) { node.visible = true; }, child.nodes );
                         var parent = child.parent;
                         while( parent )
                         {
@@ -237,7 +264,7 @@ class TreeNodeProvider
 
     clearFilter()
     {
-        forEach( function( e ) { e.visible = true; }, nodes );
+        forEachNode( function( e ) { e.visible = true; }, nodes );
     }
 
     populate( data, icons, formatters, keyField )
@@ -247,7 +274,7 @@ class TreeNodeProvider
             return node.type === this.type && node.value === this.value;
         };
 
-        forEach( function( node ) { node.delete = true; }, nodes );
+        forEachNode( function( node ) { node.delete = true; }, nodes );
 
         var updatedEntries = [];
 
@@ -339,7 +366,7 @@ class TreeNodeProvider
                         }
                         else
                         {
-                            if( hasChanged )
+                            if( hasChanged && node.showChanged )
                             {
                                 node.changed = true;
                             }
@@ -486,15 +513,21 @@ class TreeNodeProvider
 
     setChanged( node, changed )
     {
-        node.changed = changed;
+        if( node.showChanged )
+        {
+            node.changed = changed;
+        }
         if( changed )
         {
             changedNodes[ node.id ] = true;
-            forEach( function( e ) { e.changed = true; }, node.nodes );
+            forEachNode( function( node ) { if( node.showChanged === true ) { node.changed = true; } }, node.nodes );
             var parent = node.parent;
             while( parent )
             {
-                parent.changed = true;
+                if( parent.showChanged === true )
+                {
+                    parent.changed = true;
+                }
                 parent = parent.parent;
             }
         }
@@ -509,7 +542,7 @@ class TreeNodeProvider
 
     clearAll()
     {
-        forEach( function( node ) { node.changed = false; }, nodes );
+        forEachNode( function( node ) { node.changed = false; }, nodes );
         changedNodes = {};
         this._context.workspaceState.update( 'changedNodes', changedNodes );
         this.refresh();
@@ -518,7 +551,7 @@ class TreeNodeProvider
     hasChanged()
     {
         var hasChanged = false;
-        forEach( function( node )
+        forEachNode( function( node )
         {
             if( node.showChanged && node.changed && node.visible )
             {
