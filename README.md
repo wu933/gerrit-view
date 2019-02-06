@@ -2,7 +2,9 @@
 
 This extension provides a view of your Gerrit server.
 
-When parts of the tree are updated they are displayed larger and brighter. By default, the view is automatically refreshed every minute.
+When parts of the tree are updated they are displayed larger and brighter. Clicking items will reset them.
+
+By default, the view is automatically refreshed every minute.
 
 The extension assumes that Jenkins is being used for continuous integration.
 
@@ -14,13 +16,13 @@ TODO: Provide access to the tree structure configuration.
 
 The view title bar contains the following buttons:
 
-<img src="resources/icons/light/tick.svg" height="16px"> clears all changed items<br>
-<img src="resources/icons/light/star.svg" height="16px"/> show only changed items (click items to remove from the view)<br>
-<img src="resources/icons/light/empty-star.svg" height="16px"/> show all items<br>
-<img src="resources/icons/light/filter.svg" height="16px"> filter the view based on the contents of one of the fields<br>
-<img src="resources/icons/light/clear-filter.svg" height="16px"> clear the current filter<br>
-<img src="resources/icons/light/refresh.svg" height="16px"> refresh the view<br>
-<img src="resources/icons/light/collapse.svg" height="16px"> refresh the view<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/tick.png" height="16px"> clears all changed items<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/star.png" height="16px"/> show only changed items<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/empty-star.png" height="16px"/> show all items<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/filter.png" height="16px"> filter the view based on the contents of one of the fields<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/clear-filter.png" height="16px"> clear the current filter<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/refresh.png" height="16px"> refresh the view<br>
+<img src="https://raw.githubusercontent.com/Gruntfuggly/gerrit-view/master/resources/collapse.png" height="16px"> collapse the view<br>
 
 
 ## Installing
