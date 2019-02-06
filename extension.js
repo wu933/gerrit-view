@@ -334,6 +334,7 @@ function activate( context )
             if( node.showChanged )
             {
                 provider.setChanged( node, false );
+                setContext();
             }
         } ) );
 
@@ -342,6 +343,7 @@ function activate( context )
             if( node.showChanged )
             {
                 provider.setChanged( node, true );
+                setContext();
             }
         } ) );
 

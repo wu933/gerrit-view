@@ -11,7 +11,6 @@ var storageLocation;
 var nodes = [];
 var expandedNodes = {};
 var changedNodes = {};
-var changedEntries = [];
 var hashes = {};
 var keys = new Set();
 var selectedNode;
@@ -85,7 +84,7 @@ class TreeNodeProvider
         showChangedOnly = _context.workspaceState.get( 'showChangedOnly', false );
         expandedNodes = _context.workspaceState.get( 'expandedNodes', {} );
         changedNodes = _context.workspaceState.get( 'changedNodes', {} );
-        changedEntries = _context.workspaceState.get( 'changedEntries', [] );
+        hashes = _context.workspaceState.get( 'hashes', {} );
 
         if( _context.storagePath && !fs.existsSync( _context.storagePath ) )
         {
@@ -268,9 +267,8 @@ class TreeNodeProvider
                 if( key !== undefined )
                 {
                     var newHash = hash( JSON.stringify( entry ) );
-                    if( hashes[ key ] != newHash && changedEntries.indexOf( key ) === -1 )
+                    if( hashes[ key ] != newHash )
                     {
-                        changedEntries.push( key );
                         updatedEntries.push( key );
                         hasChanged = true;
                     }
@@ -419,7 +417,7 @@ class TreeNodeProvider
 
         this.prune();
 
-        this._context.workspaceState.update( 'changedEntries', changedEntries );
+        this._context.workspaceState.update( 'hashes', hashes );
 
         return updatedEntries;
     }
@@ -505,6 +503,7 @@ class TreeNodeProvider
             delete changedNodes[ node.id ];
         }
         this._context.workspaceState.update( 'changedNodes', changedNodes );
+        this._context.workspaceState.update( 'hashes', hashes );
         this.refresh();
     }
 
@@ -512,9 +511,7 @@ class TreeNodeProvider
     {
         forEach( function( node ) { node.changed = false; }, nodes );
         changedNodes = {};
-        changedEntries = [];
         this._context.workspaceState.update( 'changedNodes', changedNodes );
-        this._context.workspaceState.update( 'changedEntries', changedEntries );
         this.refresh();
     }
 
